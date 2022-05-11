@@ -29,7 +29,7 @@ systemctl enable firewalld.service
 ```
 8、查看端口开放列表
 ```code
-firewall-cmd —list-ports
+firewall-cmd --list-ports
 ```
 9、永久开放80端口
 ```code
