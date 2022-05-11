@@ -17,7 +17,7 @@ systemctl restart firewalld.service
 ```
 5、重载firewall
 ```code
-firewall-cmd —reload
+firewall-cmd --reload
 ```
 6、禁止firewall开机启动
 ```code
