@@ -1,4 +1,7 @@
 # firewall常用命令
+```sh
+yum install -y firewalld
+```
 1、查看firewall状态
 ```code
 firewall-cmd --state
