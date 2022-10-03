@@ -1,6 +1,6 @@
 # firewall常用命令
 ```sh
-yum install -y firewalld
+yum install -y firewalld # 安装防火墙
 ```
 1、查看firewall状态
 ```code
