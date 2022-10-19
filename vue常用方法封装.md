@@ -1,4 +1,4 @@
-***动态初始化数据数据方法***
+***动态初始化data方法***
 ```javascript
 <template>
   <div></div>
