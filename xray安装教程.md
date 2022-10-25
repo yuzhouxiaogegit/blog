@@ -47,7 +47,7 @@ cd /usr/local/etc/xray
 ```
 ### 也可直接下载配置文件内容 config.json 到/usr/local/etc/xray目录下进行修改
 ```code
-wget https://raw.githubusercontent.com/yuzhouxiaogegit/blog/dcf899ea0f4f1723e586cb37f3f63bde5431f842/file/config.json
+wget https://raw.githubusercontent.com/yuzhouxiaogegit/blog/main/file/config.json
 ```
 ### 设置开机启动
 ``` code
