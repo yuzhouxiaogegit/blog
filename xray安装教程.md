@@ -79,7 +79,7 @@ sudo systemctl stop xray
 ```code
  location /ray { # 与 xray 配置中的 path 保持一致
       if ($http_upgrade != "websocket") { # WebSocket协商失败时返回首页
-           rewrite ^(/.*)$ https://$host;
+           rewrite (.*)$ https://$host;
       }
       proxy_redirect off;
       proxy_pass http://127.0.0.1:10000; # 假设WebSocket监听在环回地址的10000端口上
