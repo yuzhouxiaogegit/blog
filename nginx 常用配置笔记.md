@@ -1,6 +1,6 @@
 ### 匹配所有js和css文件重写到指定目录且只保留文件名
 ```nginx
-location ~ .*\.(js|css)?$ {
+location ~ .*\.(js|css)$ {
     expires 30d; # 缓存30天
     # 重写到指定目录 break是不在发生新的请求
     rewrite ^/(/.*(js|css)$) /wp-content/cache/staticfile$1 break;
@@ -23,7 +23,7 @@ if ($query_string != "") {
     set $cache_uri 'null cache';
 }
 # 匹配符合规则的文件静止缓存
-if ($request_uri ~* "\.(php|xml)?$") {
+if ($request_uri ~* "\.(php|xml)$") {
     set $cache_uri 'null cache';
 }
 # wp-super-cache 早期版本或者是使用http访问
@@ -38,7 +38,7 @@ location / {
 
 ### nginx常用的静态文件缓存设置
 ```nginx
-location ~ .*\.(js|css|eot|ttf|woff|woff2|otf|ico|svg|gif|jpg|jpeg|png|bmp|swf|webp|mp4|flv|txt|bmp|doc|zip|docx|rar)?$ {
+location ~ .*\.(js|css|eot|ttf|woff|woff2|otf|ico|svg|gif|jpg|jpeg|png|bmp|swf|webp|mp4|flv|txt|bmp|doc|zip|docx|rar)$ {
     expires 30d; # 缓存30天
     error_log /dev/null;
     access_log off;
@@ -47,7 +47,7 @@ location ~ .*\.(js|css|eot|ttf|woff|woff2|otf|ico|svg|gif|jpg|jpeg|png|bmp|swf|w
 
 ### 防盗链配置
 ```nginx
-location ~ .*\.(js|css|eot|ttf|woff|woff2|otf|ico|svg|gif|jpg|jpeg|png|bmp|swf|webp|mp4|flv|txt|bmp|doc|zip|docx|rar)?$ {
+location ~ .*\.(js|css|eot|ttf|woff|woff2|otf|ico|svg|gif|jpg|jpeg|png|bmp|swf|webp|mp4|flv|txt|bmp|doc|zip|docx|rar)$ {
     expires 30d; #缓存30天
     error_log /dev/null;
     access_log off;
