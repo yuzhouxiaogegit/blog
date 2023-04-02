@@ -10,10 +10,27 @@ location ~ .*\.(js|css)?$
 
 ### wp-super-cache缓存插件伪静态配置
 ```nginx
+set $cache_uri $request_uri;
+# 静止为登录用户缓存
+if ($http_cookie) {
+        set $cache_uri 'null cache';
+}
+# post 请求静止缓存
+if ($request_method = POST) {
+        set $cache_uri 'null cache';
+}
+# url 带有参数静止缓存
+if ($query_string != "") {
+        set $cache_uri 'null cache';
+}
+# 匹配符合规则的文件静止缓存
+if ($request_uri ~* "\.(php|xml)?$") {
+         set $cache_uri 'null cache';
+}
 # wp-super-cache 早期版本或者是使用http访问
-set $http_url /wp-content/cache/supercache/$http_host/$request_uri/index.html;
+set $http_url /wp-content/cache/supercache/$http_host/$cache_uri/index.html;
 # wp-super-cache 新版本或者是使用https时访问
-set $https_url /wp-content/cache/supercache/$http_host/$request_uri/index-https.html;
+set $https_url /wp-content/cache/supercache/$http_host/$cache_uri/index-https.html;
 location /
 {
     # 如果有缓存文件则直接访问缓存目录  没有则从新生成
