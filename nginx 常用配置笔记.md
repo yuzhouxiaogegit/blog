@@ -37,8 +37,10 @@ location ~ .*\.(js|css|eot|ttf|woff|woff2|otf|ico|svg|gif|jpg|jpeg|png|bmp|swf|w
 {
     expires 30d;  #缓存30天
     access_log off;
-    # 允许访问的域名
-    valid_referers none blocked baidu.com www.baidu.com;
+    # 允许链接单独访问
+    #valid_referers none blocked baidu.com www.baidu.com;
+    # 仅支持网站内访问
+    valid_referers baidu.com www.baidu.com;
     if ($invalid_referer){
        return 404;
     }
