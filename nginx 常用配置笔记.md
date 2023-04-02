@@ -2,6 +2,7 @@
 ```nginx
 location ~ .*\.(js|css)?$
 {
+  expires 30d; # 缓存30天
   # 重写到指定目录 break是不在发生新的请求
   rewrite ^/(/.*(js|css)$) /wp-content/cache/staticfile$1 break;
 }
