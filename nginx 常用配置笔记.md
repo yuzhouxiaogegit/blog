@@ -23,10 +23,24 @@ location /
 
 ### nginx常用的静态文件缓存设置
 ```nginx
-location ~ .*\.(js|css|eot|ttf|woff|woff2|otf|ico|svg|gif|jpg|jpeg|png|bmp|swf|webp)?$
+location ~ .*\.(js|css|eot|ttf|woff|woff2|otf|ico|svg|gif|jpg|jpeg|png|bmp|swf|webp|mp4|flv|txt|bmp|doc|zip|docx|rar)?$
 {
     expires 30d;  # 缓存30天
     error_log /dev/null;
     access_log off; 
 }
 ````
+
+### 防盗链配置
+```nginx
+location ~ .*\.(js|css|eot|ttf|woff|woff2|otf|ico|svg|gif|jpg|jpeg|png|bmp|swf|webp|mp4|flv|txt|bmp|doc|zip|docx|rar)?$
+{
+    expires 30d;  #缓存30天
+    access_log off;
+    # 允许访问的域名
+    valid_referers none blocked baidu.com www.baidu.com;
+    if ($invalid_referer){
+       return 404;
+    }
+}
+```
