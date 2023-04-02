@@ -1,4 +1,4 @@
-### 匹配所有js和css文件
+### 匹配所有js和css文件重写到指定目录且只保留文件名
 ```nginx
 location ~ .*\.(js|css)?$
 {
