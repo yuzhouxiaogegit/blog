@@ -20,3 +20,13 @@ location /
     try_files $https_url $http_url $uri $uri/ /index.php?$args;
 }
 ```
+
+### nginx常用的静态文件缓存设置
+```nginx
+location ~ .*\.(js|css|eot|ttf|woff|woff2|otf|ico|svg|gif|jpg|jpeg|png|bmp|swf|webp)?$
+{
+    expires 30d;  # 缓存30天
+    error_log /dev/null;
+    access_log off; 
+}
+````
