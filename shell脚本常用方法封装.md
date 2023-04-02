@@ -44,3 +44,8 @@ echoTxtColor(){
 # 调用示例
 echoTxtColor "常用shell脚本方法封装" "green"
 ```
+
+### 删除整个系统中的php文件
+```sh
+find / -name *.php | xargs rm -rf
+```
