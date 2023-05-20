@@ -96,3 +96,75 @@ export function Decode(strJson, salt) {
     }
     return JSON.parse(res);
 }
+
+// 数组去重函数
+// let tempArrObj = [{ name: '张三', age: 15, sex: 5 }, { name: '李四', age: 12, sex: 1 }, { name: '王五', age: 15, sex: 5 }, { name: '张三', age: 12, sex: 1 }, { name: '李四', age: 15, sex: 1 }];
+// console.log(remRepeat(tempArrObj, (a, b) => { return a.name == b.name }));
+export function remRepeat(tempArr, ifFun) {
+    let newTempArr = [];
+    for (let i in tempArr) {
+        if (i === '0') { newTempArr[0] = tempArr[0]; }
+        for (let j in newTempArr) {
+            if (ifFun(tempArr[i], newTempArr[j])) {
+                break;
+            }
+            if (j == newTempArr.length - 1) {
+                newTempArr.push(tempArr[i]);
+            }
+        }
+    }
+    return newTempArr;
+}
+
+// 通过时间戳转换为日期格式
+// console.log(timestampToDate(new Date().getTime()))
+// console.log(timestampToDate(new Date().getTime(), (v) => { return v.Y + '年' + v.M + '月' + v.D + '日' + ' ' + v.h + '时' + v.m + '分' + v.s + '秒' }))
+export function timestampToDate(timestamp, formatFun = null) {
+    if ((timestamp + '').length == 10) {
+        timestamp = timestamp * 1000;
+    }
+    let date = new Date(timestamp);
+    let result = {};
+    result.Y = (date.getFullYear() + '');
+    result.M = completion(date.getMonth() + 1);
+    result.D = completion(date.getDate());
+    result.h = completion(date.getHours());
+    result.m = completion(date.getMinutes());
+    result.s = completion(date.getSeconds());
+    function completion(num) {
+        num = num.toString();
+        return num[1] ? num : '0' + num;
+    }
+    if (formatFun == null) {
+        return result.Y + '-' + result.M + '-' + result.D + ' ' + result.h + ':' + result.m + ':' + result.s;
+    }
+    return formatFun(result)
+}
+
+// 通过日期获取当前周的所有日期
+// console.log(getWeekList())
+// console.log(getWeekList('2022-12-31'))
+// console.log(getWeekList('2022-12-31', '/'))
+export function getWeekList(tempDate = null, tag = '-') {
+    let weekList = [];
+    let date = tempDate ? new Date(tempDate) : new Date();
+    if (date.getDay() == "0") {
+        date.setDate(date.getDate() - 6);
+    } else {
+        date.setDate(date.getDate() - date.getDay() + 1);
+    }
+    let myDate = completion(date.getDate());
+    let myMonth = completion(date.getMonth() + 1);
+    weekList.push(date.getFullYear() + tag + myMonth + tag + myDate);
+    for (let i = 0; i < 6; i++) {
+        date.setDate(date.getDate() + 1);
+        myDate = completion(date.getDate());
+        myMonth = completion(date.getMonth() + 1);
+        weekList.push(date.getFullYear() + tag + myMonth + tag + myDate);
+    }
+    function completion(num) {
+        num = num.toString();
+        return num[1] ? num : '0' + num;
+    }
+    return weekList;
+}
