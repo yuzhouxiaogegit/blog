@@ -42,7 +42,7 @@ read -p "请输入伪装路径，默认随机生成:" xrayPath
 if 
 	[[ $xrayPath = "" ]];
 then
-	xrayPath=$(random_str 1 15)
+	xrayPath=$(random_str 1 11)
 fi
 
 # xray端口
