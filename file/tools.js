@@ -168,3 +168,39 @@ export function getWeekList(tempDate = null, tag = '-') {
     }
     return weekList;
 }
+
+// 设置页面缓存 console.log(setPageCache('test',{name:'张三'}))
+export function setPageCache(page, value) {
+    let result = {}
+    if (typeof page !== "string") {
+        page = JSON.stringify(page)
+    }
+    try {
+        result = JSON.parse(sessionStorage[page]);
+    } catch (error) {
+        result = '';
+    }
+    if (typeof value === "object" && typeof result === 'object') {
+        for (let i in value) {
+            result[i] = value[i];
+        }
+    } else {
+        result = value;
+    }
+    sessionStorage[page] = JSON.stringify(result);
+    return true;
+}
+
+// 获取页面缓存 console.log(getPageCache('test'))
+export function getPageCache(page) {
+    if (typeof page !== "string") {
+        page = JSON.stringify(page)
+    }
+    let result = {};
+    try {
+        result = JSON.parse(sessionStorage[page]);
+    } catch (error) {
+        result = '';
+    }
+    return result;
+}
