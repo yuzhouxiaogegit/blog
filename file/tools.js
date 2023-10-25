@@ -180,12 +180,12 @@ export function setPageCache(page, value) {
     } catch (error) {
         result = '';
     }
-    if (typeof value === "object" && typeof result === 'object') {
+    if (value && result && typeof value === "object" && typeof result === 'object') {
         for (let i in value) {
             result[i] = value[i];
         }
     } else {
-        result = value;
+        result = value ? value : '';
     }
     sessionStorage[page] = JSON.stringify(result);
     return true;
