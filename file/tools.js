@@ -7,14 +7,13 @@ export function getAge(birthday, lastDay = null) {
       let d = new Date();
       lastDay = `${d.getFullYear()}-${(d.getMonth() + 1) <= 9 ? '0' + (d.getMonth() + 1) : (d.getMonth() + 1)}-${d.getDate() <= 9 ? '0' + d.getDate() : d.getDate()}`
     }
-    let result = 0;
     try {
       birthday = birthday.replace(/\s.*/g, '');
       lastDay = lastDay.replace(/\s.*/g, '');
       birthday = birthday.split('-');
       lastDay = lastDay.split('-');
       if (lastDay[0] - birthday[0] <= 0) {
-        return result;
+        return 0;
       }
       let diffBirthday = Number(birthday[1]) + '' + birthday[2];
       let diffLastDay = Number(lastDay[1]) + '' + lastDay[2];
