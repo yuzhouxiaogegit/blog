@@ -258,3 +258,42 @@ export function vueInitData(that, key = '') {
   }
   new Function('that', `${runStr};`)(that);
 }
+
+// 深度赋值json对象或者数组
+export function deepCopy(obj) {
+  var result = Array.isArray(obj) ? [] : {};
+  for (var key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        result[key] = deepCopy(obj[key]);   //递归复制
+      } else {
+        result[key] = obj[key];
+      }
+    }
+  }
+  return result;
+}
+
+// blob 格式下载
+export function downloadBlobFn(blob, downloadValue) { 
+    const a = document.createElement('a')
+    a.href = window.URL.createObjectURL(blob)
+    a.download = downloadValue // downloadValue为下载文件的名字，在函数外处理好再传传进来
+    a.textContent = 'export data'
+    a.style.textIndent = '-1000px'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+}
+
+// url 格式下载
+export function downloadUrlFn(url, downloadValue) { 
+    var a = document.createElement('a')
+    a.href = url
+    a.download = downloadValue // downloadValue为下载文件的名字，在函数外处理好再传传进来
+    a.textContent = 'export data'
+    a.style.textIndent = '-1000px'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+}
