@@ -249,3 +249,12 @@ export function base64ToFile(base64, fileName) {
     // 将File文件对象返回给方法的调用者
     return file;
 }
+
+// vue2 初始化组件中data值
+export function vueInitData(that, key = '') {
+  let runStr = `Object.assign(that.$data,that.$options.data());`;
+  if (typeof key === 'string' && key) {
+    runStr = `that.${key} = that.$options.data().${key};`;
+  }
+  new Function('that', `${runStr};`)(that);
+}
