@@ -297,3 +297,16 @@ export function downloadUrlFn(url, downloadValue) {
     a.click()
     document.body.removeChild(a)
 }
+
+// 表单校验提示封装
+// console.log(checkFormFn([{ fun: () => { return true; }, hint: "用户名不能为空！" }]))
+export function checkFormFn(params, funKey = 'fun', hintKey = "hint") {
+  if (typeof params === "object" && typeof funKey === "string" && typeof hintKey === "string") {
+    for (let i in params) {
+      if (params[i][funKey]()) {
+        return params[i][hintKey];
+      }
+    }
+  }
+  return '';
+}
