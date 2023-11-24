@@ -1,15 +1,32 @@
 // 通过出生日期计算年龄
 // console.log(getAge('2001-01-01'))
-export function getAge(birthday = '1999-01-01') {
-    if (typeof birthday == 'string') {
-        birthday = birthday.replace(/\s.*/g, '');
-        let result = ((new Date() - new Date(birthday)) / (24 * 60 * 60 * 1000 * 365) + '').split('.');
-        if (Number(result[0]) >= 1) {
-            return Number(result[0]);
-        }
-        return Number(result[1] && result[1][0] !== '0' ? result[0] + '.' + result[1][0] : result[0]);
+// console.log(getAge('2001-01-01', '2022-12-26'))
+export function getAge(birthday, lastDay = null) {
+  if (typeof birthday === "string" && /^(\d+-\d+-\d+)/.test(birthday)) {
+    if (typeof lastDay !== "string" || !/^(\d+-\d+-\d+)/.test(lastDay)) {
+      let d = new Date();
+      lastDay = `${d.getFullYear()}-${(d.getMonth() + 1) <= 9 ? '0' + (d.getMonth() + 1) : (d.getMonth() + 1)}-${d.getDate() <= 9 ? '0' + d.getDate() : d.getDate()}`
     }
-    throw new TypeError('getAge 方法需要传入日期字符串、列如：1999-01-01')
+    let result = 0;
+    try {
+      birthday = birthday.replace(/\s.*/g, '');
+      lastDay = lastDay.replace(/\s.*/g, '');
+      birthday = birthday.split('-');
+      lastDay = lastDay.split('-');
+      if (lastDay[0] - birthday[0] <= 0) {
+        return result;
+      }
+      let diffBirthday = Number(birthday[1]) + '' + birthday[2];
+      let diffLastDay = Number(lastDay[1]) + '' + lastDay[2];
+      if (Number(diffBirthday) <= Number(diffLastDay)) {
+        return lastDay[0] - birthday[0];
+      }
+      return (lastDay[0] - birthday[0]) - 1;
+    } catch (error) {
+      return 0;
+    }
+  }
+  return 0;
 }
 
 // 字符串超出省略号显示
