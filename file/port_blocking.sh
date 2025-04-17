@@ -64,9 +64,6 @@ for ip in ${resIpList[@]}; do
 done
 read -p "是否屏蔽非80,443的端口:(默认y/n)" portClose
 
-firewall-cmd --zone=public --add-port=80/tcp --permanent
-firewall-cmd --zone=public --add-port=443/tcp --permanent
-	
 if [[ $portClose == 'y' || $portClose == '' ]]; then
 	portList=$(firewall-cmd --list-ports)
 	resPortList=(${portList// / })
@@ -78,6 +75,8 @@ if [[ $portClose == 'y' || $portClose == '' ]]; then
 	done
 fi
 
+firewall-cmd --zone=public --add-port=80/tcp --permanent
+firewall-cmd --zone=public --add-port=443/tcp --permanent
 firewall-cmd --reload
 echo -e "\n"
 echoTxtColor "防火墙开放端口列表" "green"
@@ -87,11 +86,11 @@ echoTxtColor "允许通过防火墙的ip" "green"
 firewall-cmd --list-rich-rules
 
 
-	for v in ${resPortList[@]}; do
-		if [[ $v == '80/tcp' || $v == '80/udp' || $v == '443/tcp' || $v == '443/udp' ]]; then
-			continue
-		fi
-		firewall-cmd --zone=public --remove-port=$v --permanent
+for v in ${resPortList[@]}; do
+	if [[ $v == '80/tcp' || $v == '80/udp' || $v == '443/tcp' || $v == '443/udp' ]]; then
+		continue
+	fi
+	firewall-cmd --zone=public --remove-port=$v --permanent
 	done
 fi
 
