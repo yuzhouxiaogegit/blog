@@ -34,7 +34,7 @@ echoTxtColor(){
 }
 
 # 伪装域名
-read -p "请输入境外域名,注意必须支持h2、h3协议(例如 amazon.com):" xrayDomain;
+read -p "请输入境外域名,注意必须支持h2、h3协议(例如 www.amazon.com):" xrayDomain;
 if 
 	[[ $xrayDomain = "" ]];
 then
