@@ -23,6 +23,8 @@ echoTxtColor(){
 
 yum install -y firewalld # 安装防火墙
 
+systemctl restart firewalld.service # 重启防火墙
+
 read -p "请输入允许的ip通过防火墙【多个ip用英文逗号间隔】,输入n取消:" ipList
 
 resIpList=(${ipList//,/ })
