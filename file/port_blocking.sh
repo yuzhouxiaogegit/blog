@@ -74,26 +74,8 @@ if [[ $portClose == 'y' || $portClose == '' ]]; then
 		firewall-cmd --zone=public --remove-port=$v --permanent
 	done
 fi
-
 firewall-cmd --zone=public --add-port=80/tcp --permanent
 firewall-cmd --zone=public --add-port=443/tcp --permanent
-firewall-cmd --reload
-echo -e "\n"
-echoTxtColor "防火墙开放端口列表" "green"
-firewall-cmd --list-ports
-echo -e "\n"
-echoTxtColor "允许通过防火墙的ip" "green"
-firewall-cmd --list-rich-rules
-
-
-for v in ${resPortList[@]}; do
-	if [[ $v == '80/tcp' || $v == '80/udp' || $v == '443/tcp' || $v == '443/udp' ]]; then
-		continue
-	fi
-	firewall-cmd --zone=public --remove-port=$v --permanent
-	done
-fi
-
 firewall-cmd --reload
 echo -e "\n"
 echoTxtColor "防火墙开放端口列表" "green"
