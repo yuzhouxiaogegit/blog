@@ -67,8 +67,7 @@ if [[ $portClose == 'y' || $portClose == '' ]]; then
 	portList=$(firewall-cmd --list-ports)
 	resPortList=(${portList// / })
 	
-	firewall-cmd --zone=public --add-port=80/tcp --permanent
-	firewall-cmd --zone=public --add-port=443/tcp --permanent
+	firewall-cmd --zone=public --add-port=80/tcp --permanent && firewall-cmd --zone=public --add-port=443/tcp --permanent
 	
 	for v in ${resPortList[@]}; do
 		if [[ $v == '80/tcp' || $v == '80/udp' || $v == '443/tcp' || $v == '443/udp' ]]; then
