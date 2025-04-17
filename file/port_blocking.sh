@@ -21,6 +21,8 @@ echoTxtColor(){
 # 调用示例
 # echoTxtColor "您的文字颜色打印成功" "green"
 
+yum install -y firewalld # 安装防火墙
+
 read -p "请输入允许的ip通过防火墙【多个ip用英文逗号间隔】,输入n取消:" ipList
 
 resIpList=(${ipList//,/ })
