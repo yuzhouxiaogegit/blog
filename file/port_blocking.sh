@@ -45,7 +45,9 @@ if [[ $portClose == 'y' || $portClose == '' ]]; then
 fi
 
 firewall-cmd --zone=public --add-port=80/tcp --permanent
+firewall-cmd --zone=public --add-port=80/udp --permanent
 firewall-cmd --zone=public --add-port=443/tcp --permanent
+firewall-cmd --zone=public --add-port=443/udp --permanent
 firewall-cmd --reload
 
 echo -e "\n"
