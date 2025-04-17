@@ -83,4 +83,3 @@ firewall-cmd --list-ports
 echo -e "\n"
 echoTxtColor "允许通过防火墙的ip" "green"
 firewall-cmd --list-rich-rules
-
