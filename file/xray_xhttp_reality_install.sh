@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 #获取ipv4
-selfIpv4=$(curl -s http://ipv4.icanhazip.com);
+selfIpv4=$(timeout 10 curl -s http://ipv4.icanhazip.com);
 
 #获取ipv6
-selfIpv6=$(curl -s http://ipv6.icanhazip.com);
+selfIpv6=$(timeout 10 curl -s http://ipv6.icanhazip.com);
 
 #指定区间随机数字
 function random_num {
