@@ -33,5 +33,5 @@ echoTxtColor(){
 # $2 = 软件名称
 # 函数调用示例 getNewVersionNum 'https://github.com/fatedier/frp/releases/' 'frp'
 getNewVersionNum(){
-	wget --timeout=10 $1 -O temp_$2.txt && echo "$(grep -Eo $2.[0-9.]+ temp_$2.txt | grep -Eo [0-9.]+[0-9] | tail -n 1)" && rm -rf temp_$2.txt
+	wget --timeout=10 $1 -O temp_$2.txt && echo $(grep -Eo $2.[0-9.]+ temp_$2.txt | grep -Eo [0-9.]+[0-9] | tail -n 1) && rm -rf temp_$2.txt
 }
