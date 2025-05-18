@@ -11,6 +11,8 @@ function random_str {
 }
 
 # 打印文字颜色方法
+# 调用示例
+# echoTxtColor "您的文字颜色打印成功" "green"
 echoTxtColor(){
 	colorV="1"
 	if [[ $2 = 'red' ]];
