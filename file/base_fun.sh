@@ -29,14 +29,14 @@ echoTxtColor(){
 }
 
 # 获取最新软件版本号码,非gitbub版本号也能获取,例如:ffmpeg等
-# $1 = 软件releases地址
-# $2 = 软件名称
-# 函数调用示例 getNewVersionNum 'https://github.com/fatedier/frp/releases/' 'frp'
+# $1 = 软件releases地址  参数示列值（https://www.ffmpeg.org/releases/）
+# $2 = 软件名称：ffmpeg  参数示列值（ffmpeg-7.0.2.tar.xz）  
+# 函数调用示例 getNewVersionNum 'https://www.ffmpeg.org/releases/' 'ffmpeg'
 getNewVersionNum(){
 	if [[ $1 =~ github.com ]]
 		then
-		   	wget --timeout=10 $1 -O temp_$2.txt && echo $(grep -Eo tag/[vV]?[0-9.]+[0-9] temp_$2.txt | grep -Eo [vV]?[0-9.]+[0-9] | head -n 1) && rm -rf temp_$2.txt
+			wget --timeout=10 -qO- $1 | grep -Eo 'tag/[vV]?([0-9]+\.)+[0-9]+' | grep -Eo '[vV]?([0-9]+\.)+[0-9]' | head -n 1
 		else 
-			wget --timeout=10 $1 -O temp_$2.txt && echo $(grep -Eo $2.[vV]?[0-9.]+[0-9] temp_$2.txt | grep -Eo [vV]?[0-9.]+[0-9] | tail -n 1) && rm -rf temp_$2.txt
+			wget --timeout=10 -qO- $1 | grep -Eo $2'.[vV]?([0-9]+\.)+[0-9]+' | grep -Eo '[vV]?([0-9]+\.)+[0-9]+' | tail -n 1
 	fi
 }
