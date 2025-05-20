@@ -35,8 +35,8 @@ echoTxtColor(){
 getNewVersionNum(){
 	if [[ $1 =~ github.com ]]
 		then
-			wget --timeout=10 -qO- $1 | grep -Eo 'tag/[vV]?([0-9]+\.)+[0-9]+' | grep -Eo '[vV]?([0-9]+\.)+[0-9]' | head -n 1
+			wget --timeout=10 -qO- $1 | grep -Po '(?<=/tag/)[vV]?([0-9]+\.)+[0-9]+' | head -n 1
 		else 
-			wget --timeout=10 -qO- $1 | grep -Eo $2'.[vV]?([0-9]+\.)+[0-9]+' | grep -Eo '[vV]?([0-9]+\.)+[0-9]+' | tail -n 1
+			wget --timeout=10 -qO- $1 | grep -Po '(?<='$2'.)[vV]?([0-9]+\.)+[0-9]+' | tail -n 1
 	fi
 }
