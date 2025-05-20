@@ -40,3 +40,28 @@ getNewVersionNum(){
 			wget --timeout=10 -qO- $1 | grep -Po '(?<='$2'.)[vV]?([0-9]+\.)+[0-9]+' | tail -n 1
 	fi
 }
+
+# 获取系统判断包管理器
+getPackageManage(){
+
+	if command -v yum &> /dev/null; then
+	    # 系统使用 yum (可能是 CentOS/RHEL/Fedora)
+	    echo "yum"
+	elif command -v dnf &> /dev/null; then
+	    # 系统使用 dnf (可能是 Fedora/较新的 RHEL)
+	    echo "dnf"
+	elif command -v apt-get &> /dev/null; then
+	    # 系统使用 apt-get (可能是 Debian/Ubuntu)
+	    echo "apt"
+	elif command -v zypper &> /dev/null; then
+	    # 系统使用 zypper (可能是 openSUSE/SUSE Linux Enterprise)
+	    echo "zypper"
+	elif command -v pacman &> /dev/null; then
+	    # 系统使用 pacman (可能是 Arch Linux)
+	    echo "pacman"
+	else
+	    # 无法确定包管理器类型
+	    echo "unknown"
+	fi
+
+}
