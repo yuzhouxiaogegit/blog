@@ -205,7 +205,7 @@ systemctl status xray
 crontabStr='0 23 * * 6  bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install && systemctl restart xray'
 isXrayCron=$(cat /var/spool/cron/root | grep install-release)
 
-if [[ $isXrayCron ]];then
+if [[ $isXrayCron == '' ]];then
     echo "$crontabStr" >> /var/spool/cron/root;
     systemctl reload crond.service;
     systemctl restart crond.service;
