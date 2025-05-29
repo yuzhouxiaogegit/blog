@@ -34,12 +34,11 @@ echoTxtColor(){
 }
 
 # 伪装域名
-read -p "请输入境外域名,注意必须支持h2、h3协议(例如 www.amazon.com):" xrayDomain;
+read -p "请输入境外域名,注意必须支持h2、h3协议(默认为 www.amazon.com):" xrayDomain;
 if 
 	[[ $xrayDomain = "" ]];
 then
-	echoTxtColor "请输入伪装域名！" "red";
-	exit
+	xrayDomain='www.amazon.com'
 fi
 
 # 伪装路径
@@ -69,18 +68,23 @@ then
 	userNum=10;
 fi
 
+levelId=1 # 等级id
+
 xrayUserJson='';
 
 bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install;
 
 for((i=1;i<=${userNum};i++));  
 	do   
-	xrayUserJson=${xrayUserJson}"
-            {
-                \"id\": \"`cat /proc/sys/kernel/random/uuid`\",
-				\"level\": `random_num 1 9`,
-                \"email\": \"`random_str 8 18`@qq.com\"
-            },";
+	xrayUserJson=${xrayUserJson}$(cat << EOF
+	            {
+	                "id": "$(cat /proc/sys/kernel/random/uuid)",
+	                "level": $levelId,
+	                "email": "$(random_str 8 18)@qq.com"
+	            },
+EOF
+)
+
 done 
 
 
@@ -97,57 +101,102 @@ rm -rf ./tempKey.txt;
 
 echo "$(xray x25519 | cut -d " " -f3)" >> ./tempKey.txt;
 
-echo "
+cat > /usr/local/etc/xray/config.json << EOF
+
 {
-    \"log\": {
-        \"loglevel\": \"debug\"
+    "log": {
+        "loglevel": "debug"
     },
-  \"inbounds\": [
-    {
-      \"listen\": \"0.0.0.0\",
-      \"port\": ${xrayPort},
-      \"protocol\": \"vless\",
-      \"settings\": {
-        \"clients\": [${xrayUserJson%?}
+    "stats": {},
+    "api": {
+        "tag": "api",
+        "services": [
+            "StatsService"
+        ]
+    },
+    "policy": {
+        "levels": {
+            "$levelId": {
+                "statsUserUplink": true,
+                "statsUserDownlink": true
+            }
+        },
+        "system": {
+            "statsInboundUplink": true,
+            "statsInboundDownlink": true,
+            "statsOutboundUplink": true,
+            "statsOutboundDownlink": true
+        }
+    },
+    "inbounds": [
+        {
+            "tag": "tcp",
+            "listen": "0.0.0.0",
+            "port": ${xrayPort},
+            "protocol": "vless",
+            "settings": {
+                "clients": [${xrayUserJson%?}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "xhttp",
+                "security": "reality",
+                "realitySettings": {
+                    "show": false,
+                    "target": "${xrayDomain}:${xrayPort}",
+                    "serverNames": ["${xrayDomain}"],
+                    "privateKey": "$(head -n 1 ./tempKey.txt)",
+                    "shortIds": [${shortIds%?}]
+                },
+                "xhttpSettings": {
+                    "host": "",
+                    "path": "${xrayPath}",
+                    "mode": "auto"
+                }
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls",
+                    "quic"
+                ],
+                "metadataOnly": false
+            }
+        },
+        {
+            "listen": "127.0.0.1",
+            "port": 10085,
+            "protocol": "dokodemo-door",
+            "settings": {
+                "address": "127.0.0.1"
+            },
+            "tag": "api"
+        }
+    ],
+    "outbounds": [
+        {
+            "tag": "direct",
+            "protocol": "freedom",
+            "settings": {}
+        }
+    ],
+    "routing": {
+        "rules": [
+            {
+                "inboundTag": [
+                    "api"
+                ],
+                "outboundTag": "api",
+                "type": "field"
+            }
         ],
-        \"decryption\": \"none\"
-      },
-      \"streamSettings\": {
-        \"network\": \"xhttp\",
-        \"security\": \"reality\",
-        \"realitySettings\": {
-          \"show\": false,
-          \"target\": \"${xrayDomain}:${xrayPort}\",
-          \"serverNames\": [
-            \"${xrayDomain}\"
-          ],
-          \"privateKey\": \"$(head -n 1 ./tempKey.txt)\",
-          \"shortIds\": [ ${shortIds%?}]
-        },
-        \"xhttpSettings\": {
-          \"host\": \"\",
-          \"path\": \"/${xrayPath}\",
-         \"mode\": \"auto\"
-        }
-      },
-      \"sniffing\": {
-        \"enabled\": true,
-        \"destOverride\": [\"http\", \"tls\", \"quic\"],
-        \"metadataOnly\": false
-      }
+        "domainStrategy": "AsIs"
     }
-  ],
- \"outbounds\": [
-        {
-            \"protocol\": \"freedom\",
-            \"tag\": \"direct\"
-        },
-        {
-            \"protocol\": \"blackhole\",
-            \"tag\": \"block\"
-        }
-    ]
-}" > /usr/local/etc/xray/config.json
+}
+
+EOF
 
 systemctl restart xray
 systemctl enable xray
@@ -169,25 +218,26 @@ echoTxtColor "${xrayUserJson%?}" "green";
 echo -e "\n";
 echoTxtColor "xray 客户端（ auto... ）中配置如下" "yellow";
 echo -e "\n";
-userConfig="
- {
-	\"downloadSettings\": {
-		\"address\": \"${selfIpv4}\",
-		\"port\": ${xrayPort},
-		\"network\": \"xhttp\",
-		\"security\": \"reality\",
-		\"realitySettings\": {
-			\"serverName\": \"${xrayDomain}\",
-			\"fingerprint\": \"chrome\",
-			\"publicKey\": \"`tail -n 1 ./tempKey.txt`\",
-			\"shortId\": `echo "${shortIds}" | cut -d "," -f1`
-		},
-		\"xhttpSettings\": {
-				\"path\": \"/${xrayPath}\"
-		}
-	}
- }
-";
+
+read -r -d '' userConfig << EOF
+{
+    "downloadSettings": {
+        "address": "${selfIpv4}",
+        "port": ${xrayPort},
+        "network": "xhttp",
+        "security": "reality",
+        "realitySettings": {
+            "serverName": "${xrayDomain}",
+            "fingerprint": "chrome",
+            "publicKey": "$(tail -n 1 ./tempKey.txt)",
+            "shortId": "$(echo "${shortIds}" | cut -d "," -f1)"
+        },
+        "xhttpSettings": {
+                "path": "/${xrayPath}"
+        }
+    }
+}
+EOF
 
 echoTxtColor "${userConfig}" "green";
 echo -e "\n";
