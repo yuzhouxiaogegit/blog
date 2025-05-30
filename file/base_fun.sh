@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 
 #指定区间随机数
-function random_num {
+function random_num_fun {
    shuf -i $1-$2 -n1
 }
 
 #指定区间随机字符串
-function random_str {
+function random_str_fun {
    echo $(cat /proc/sys/kernel/random/uuid || uuidgen | cut -c $1-$2) | sed 's/-//g'
 }
 
 # 打印文字颜色方法
 # 调用示例
-# echoTxtColor "您的文字颜色打印成功" "green"
-echoTxtColor(){
+# echo_txt_color "您的文字颜色打印成功" "green"
+echo_txt_color_fun(){
 	colorV="1"
 	if [[ $2 = 'red' ]];
 	then
@@ -31,8 +31,8 @@ echoTxtColor(){
 # 获取最新软件版本号码,非gitbub版本号也能获取,例如:ffmpeg等
 # $1 = 软件releases地址  参数示列值（https://www.ffmpeg.org/releases/）
 # $2 = 软件名称：ffmpeg  参数示列值（ffmpeg-7.0.2.tar.xz）  
-# 函数调用示例 getNewVersionNum 'https://www.ffmpeg.org/releases/' 'ffmpeg'
-getNewVersionNum(){
+# 函数调用示例 get_new_version_num_fun 'https://www.ffmpeg.org/releases/' 'ffmpeg'
+get_new_version_num_fun(){
 	if [[ $1 =~ github.com ]]
 		then
 			wget --timeout=10 -qO- $1 | grep -Po '(?<=/tag/)[vV]?([0-9]+\.)+[0-9]+' | head -n 1
@@ -42,7 +42,7 @@ getNewVersionNum(){
 }
 
 # 获取系统判断包管理器
-getPackageManage(){
+get_package_manage_fun(){
 
 	if command -v yum &> /dev/null; then
 	    # 系统使用 yum (可能是 CentOS/RHEL/Fedora)
