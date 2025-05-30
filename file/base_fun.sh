@@ -12,7 +12,7 @@ function random_str_fun {
 
 # 打印文字颜色方法
 # 调用示例
-# echo_txt_color "您的文字颜色打印成功" "green"
+# echo_txt_color_fun "您的文字颜色打印成功" "green"
 echo_txt_color_fun(){
 	colorV="1"
 	if [[ $2 = 'red' ]];
