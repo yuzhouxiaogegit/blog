@@ -33,8 +33,8 @@ char_en_fun(){
 	for (( i=0; i<${#tempStr}; i++ )); do
 	    local char="${tempStr:$i:1}"
 	    local original_ascii=$(printf "%d" "'$char")
-         local new_ascii=$((original_ascii + salt))
-         printf "%d " "$new_ascii"
+            local new_ascii=$((original_ascii + salt))
+                  printf "%d " "$new_ascii"
 	done
 
 }
@@ -50,7 +50,7 @@ char_de_fun(){
          local char_hex=$(printf "%x" "$original_ascii") 
                decoded_string+=$(printf "\\x$char_hex")
      done
-   echo "$decoded_string"
+     echo "$decoded_string"
 }
 
 #指定区间随机数
