@@ -1,18 +1,72 @@
 #!/usr/bin/env bash
 
+#base64加密方法
+#echo $(base64_en_fun '12')
+base64_en_fun(){
+	local loopNum=${2:-1} # 加密次数
+	local tempStr=${1:-} # 加密字符串
+	for (( i=1; i<=$loopNum; i++ ))
+	do
+	    tempStr=$(echo -n "$tempStr" | base64)
+	done
+	echo $tempStr
+
+}
+
+#base64解密方法
+#echo $(base64_de_fun "$(echo $(base64_en_fun '12'))")
+base64_de_fun(){
+	local loopNum=${2:-1} # 解密次数
+	local tempStr=${1:-} # 解密字符串
+	for (( i=1; i<=$loopNum; i++ ))
+	do
+	    tempStr=$(echo -n "$tempStr" | base64 -d)
+	done
+	echo $tempStr
+}
+
+#字符加密方法
+#echo $(char_en_fun 'qqqqq' 5)
+char_en_fun(){
+	local tempStr=${1:-} #加密值
+	local salt=${2:-0} #加密盐
+	for (( i=0; i<${#tempStr}; i++ )); do
+	    local char="${tempStr:$i:1}"
+	    local original_ascii=$(printf "%d" "'$char")
+         local new_ascii=$((original_ascii + salt))
+         printf "%d " "$new_ascii"
+	done
+
+}
+
+#字符串解密方法
+#echo $(char_de_fun "$(char_en_fun 'qqqqq' 5)" 5)
+char_de_fun(){
+	local tempStr=${1:-} # 解密值
+	local salt=${2:-0} # 解密盐
+	local decoded_string=''
+     for code in $tempStr; do
+         local original_ascii=$((code - salt))
+         local char_hex=$(printf "%x" "$original_ascii") 
+               decoded_string+=$(printf "\\x$char_hex")
+     done
+   echo "$decoded_string"
+}
+
 #指定区间随机数
+#echo $(random_num_fun 8 16)
 function random_num_fun {
    shuf -i $1-$2 -n1
 }
 
 #指定区间随机字符串
+#echo $(random_str_fun 8 19)
 function random_str_fun {
    echo $((cat /proc/sys/kernel/random/uuid || uuidgen) | cut -c $1-$2) | sed 's/-//g'
 }
 
 # 打印文字颜色方法
-# 调用示例
-# echo_txt_color_fun "您的文字颜色打印成功" "green"
+#echo_txt_color_fun "您的文字颜色打印成功" "green"
 echo_txt_color_fun(){
 	colorV="1"
 	if [[ $2 = 'red' ]];
