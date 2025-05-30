@@ -7,7 +7,7 @@ function random_num_fun {
 
 #指定区间随机字符串
 function random_str_fun {
-   echo $(cat /proc/sys/kernel/random/uuid || uuidgen | cut -c $1-$2) | sed 's/-//g'
+   echo $($(cat /proc/sys/kernel/random/uuid || uuidgen) | cut -c $1-$2) | sed 's/-//g'
 }
 
 # 打印文字颜色方法
