@@ -2,7 +2,7 @@
 
 # 作者 yuzhouxiaoge
 # 脚本链接 https://github.com/yuzhouxiaogegit/blog/edit/main/file/base_fun.sh
-# 作者唯一识别码 2YzI5MWNtTmxJRHdvZEdsdFpXOTFkQ0F4TUNCamRYSnNJQzF6SUNRb1ozSmxjQ0F0VUc4Z0p5Zy9QRDBqS1doMExpcHphQ2NnSWlRb2NtVmhaR3hwYm1zZ0xXWWdJaVF3SWlraUtTaz0=
+# 作者唯一识别码 1c291cmNlIDwodGltZW91dCAxMCBjdXJsIC1zICQoZ3JlcCAtUG8gJ2h0LiooPz1cc3szfSknICIkKHJlYWRsaW5rIC1mICIkMCIpIikp
 
 #base64加密方法
 #echo $(yzxg_base64_en '12')
