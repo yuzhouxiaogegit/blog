@@ -25,7 +25,7 @@ read -p "请输入伪装路径，默认随机生成:" xrayPath;
 if 
 	[[ $xrayPath = "" ]];
 then
-	xrayPath=$(random_str_fun 1 11);
+	xrayPath=$(yzxg_random_str 1 11);
 fi
 
 # xray端口
@@ -58,7 +58,7 @@ for((i=1;i<=${userNum};i++));
 	            {
 	                "id": "$(cat /proc/sys/kernel/random/uuid)",
 	                "level": $levelId,
-	                "email": "$(random_str_fun 8 18)@qq.com"
+	                "email": "$(yzxg_random_str 8 18)@qq.com"
 	            },
 EOF
 )
@@ -70,7 +70,7 @@ shortIds='';
 
 for((i=1;i<=${userNum};i++));  
 	do   
-	shortIds=${shortIds}"\"$(openssl rand -hex $(random_num_fun 1 8))\","
+	shortIds=${shortIds}"\"$(openssl rand -hex $(yzxg_random_num 1 8))\","
 done 
 
 tempKey=$(xray x25519);
@@ -190,11 +190,11 @@ if [[ $isXrayCron == '' ]];then
 fi
 
 echo -e "\n";
-echo_txt_color_fun "xray 服务端配置如下" "yellow";
+yzxg_echo_txt_color "xray 服务端配置如下" "yellow";
 echo -e "\n";
-echo_txt_color_fun "${xrayUserJson%?}" "green";
+yzxg_echo_txt_color "${xrayUserJson%?}" "green";
 echo -e "\n";
-echo_txt_color_fun "xray 客户端（ auto... ）中配置如下" "yellow";
+yzxg_echo_txt_color "xray 客户端（ auto... ）中配置如下" "yellow";
 echo -e "\n";
 
 read -r -d '' userConfig << EOF
@@ -217,16 +217,16 @@ read -r -d '' userConfig << EOF
 }
 EOF
 
-echo_txt_color_fun "${userConfig}" "green";
+yzxg_echo_txt_color "${userConfig}" "green";
 echo -e "\n";
 
 #如果获取到了 ipv6 则显示出来
 if 
 	[[ $selfIpv6 != "" ]];
 then
-	echo_txt_color_fun "ipv6地址如下" "yellow";
+	yzxg_echo_txt_color "ipv6地址如下" "yellow";
 	echo -e "\n";
-	echo_txt_color_fun "${selfIpv6}" "green";
+	yzxg_echo_txt_color "${selfIpv6}" "green";
 fi
 
 rm -rf ./tempKey.txt;
