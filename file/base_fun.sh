@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# 作者yuzhouxiaoge
-# 脚本链接https://github.com/yuzhouxiaogegit/blog/edit/main/file/base_fun.sh
+# 作者 yuzhouxiaoge
+# 脚本链接 https://github.com/yuzhouxiaogegit/blog/edit/main/file/base_fun.sh
 # 作者唯一识别码 2YzI5MWNtTmxJRHdvZEdsdFpXOTFkQ0F4TUNCamRYSnNJQzF6SUNRb1ozSmxjQ0F0VUc4Z0p5Zy9QRDBqS1doMExpcHphQ2NnSWlRb2NtVmhaR3hwYm1zZ0xXWWdJaVF3SWlraUtTaz0=
 
 #base64加密方法
