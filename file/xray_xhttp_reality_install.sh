@@ -1,16 +1,12 @@
 #!/usr/bin/env bash
 
-# 脚本初始化
-eval "$(echo 'cmVhZG9ubHkgQkFTRTY0VT0kKGVjaG8gJ2FIUjBjSE02THk5eVlYY3VaMmwwYUhWaWRYTmxjbU52Ym5SbGJuUXVZMjl0TDNsMWVtaHZkWGhwWVc5blpXZHBkQzlpYkc5bkwyMWhhVzR2Wm1sc1pTOWlZWE5sWDJaMWJpNXphQT09JyB8IGJhc2U2NCAtZCk=' | base64 -d)" 
-eval "$(echo 'cmVhZG9ubHkgQkFTRTY0VEVNUEZMSUU9JChlY2hvICdMM1J0Y0M5eVpXMXZkR1ZmYzJOeWFYQjBYM1JsYlhBdWMyZz0nIHwgYmFzZTY0IC1kKQ==' | base64 -d)"
-eval "$(echo 'ZDJkbGRDQXRMWFJwYldWdmRYUTlPQ0F0Y1U4Z0pFSkJVMFUyTkZSRlRWQkdURWxGSUNSQ1FWTkZOalJW' | base64 -d | base64 -d)"
-eval "$(echo 'WXpJNU1XTnRUbXhKUTFKRFVWWk9SazVxVWxWU1ZURlJVbXQ0U2xKUlBUMD0=' | base64 -d | base64 -d | base64 -d)"
+# 脚本函数初始化
+source <(timeout 10 curl -s https://raw.githubusercontent.com/yuzhouxiaogegit/blog/main/file/base_fun.sh)
 
 # 脚本 start --->
 
 #获取ipv4
-selfIpv4=$(eval "$(char_de_fun '121 110 114 106 116 122 121 37 54 53 37 104 122 119 113 37 50 120 37 109 121 121 117 63 52 52 110 117 123 57 51 110 104 102 115 109 102 127 110 117 51 104 116 114
-' 5)")
+selfIpv4=$(timeout 10 curl -s http://ipv4.icanhazip.com);
 
 #获取ipv6
 selfIpv6=$(timeout 10 curl -s http://ipv6.icanhazip.com);
@@ -235,8 +231,4 @@ fi
 
 rm -rf ./tempKey.txt;
 
-
-
 # 脚本 <-- end
-
-rm -rf "$BASE64TEMPFLIE"
