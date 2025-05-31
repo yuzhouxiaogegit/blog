@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 
 #base64加密方法
@@ -53,13 +54,13 @@ yzxg_char_de(){
 
 #指定区间随机数
 #echo $(random_num_fun 8 16)
-yzxg_random_num {
+yzxg_random_num(){
    shuf -i $1-$2 -n1
 }
 
 #指定区间随机字符串
 #echo $(random_str_fun 8 19)
-yzxg_random_str {
+yzxg_random_str(){
    echo $((cat /proc/sys/kernel/random/uuid || uuidgen) | cut -c $1-$2) | sed 's/-//g'
 }
 
