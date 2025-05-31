@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 #base64加密方法
