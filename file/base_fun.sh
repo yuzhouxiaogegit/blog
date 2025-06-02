@@ -71,13 +71,13 @@ yzxg_random_str(){
 # yzxg_echo_txt_color "您的文字颜色打印成功" "green"
 yzxg_echo_txt_color(){
 	local colorV="1"
-	if [[ $2 = 'red' ]];
+	if [[ $2 = 'red' ]]
 	then
 		colorV="1"
-	elif [[ $2 = 'green' ]];
+	elif [[ $2 = 'green' ]]
 	then
 		colorV="2"
-	elif [[ $2 = 'yellow' ]];
+	elif [[ $2 = 'yellow' ]]
 	then
 		colorV="3"
 	fi
