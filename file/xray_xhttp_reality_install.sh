@@ -3,20 +3,6 @@
 # 脚本函数初始化
 source <(timeout 5 curl -sL https://raw.githubusercontent.com/yuzhouxiaogegit/blog/main/file/base_fun.sh)
  
-if [[ $(yzxg_get_package_manage) = 'yum' ]];then
-	yum install -y curl wget unzip firewalld
-	# 开放 443 端口
-	systemctl start firewalld.service
-	firewall-cmd --zone=public --add-port=443/tcp --permanent
-	firewall-cmd --reload
-	systemctl restart firewalld.service
-fi
-
-#获取ipv4
-selfIpv4=$((timeout 5 curl -s https://ipv4.icanhazip.com) || (timeout 5 curl -s https://api.ipify.org))
-#获取ipv6
-selfIpv6=$((timeout 5 curl -s https://ipv6.icanhazip.com) || (timeout 5 curl -s -6 https://api.ipify.org))
-
 # 伪装域名
 read -p "请输入境外域名,注意必须支持h2、h3协议(默认为 www.amazon.com):" xrayDomain
 if 
@@ -51,6 +37,19 @@ if
 then
 	userNum=10;
 fi
+
+if [[ $(yzxg_get_package_manage) = 'yum' ]];then
+	yum install -y curl wget unzip firewalld
+	systemctl start firewalld.service
+	firewall-cmd --zone=public --add-port=$xrayPort/tcp --permanent
+	firewall-cmd --reload
+	systemctl restart firewalld.service
+fi
+
+#获取ipv4
+selfIpv4=$((timeout 5 curl -s https://ipv4.icanhazip.com) || (timeout 5 curl -s https://api.ipify.org))
+#获取ipv6
+selfIpv6=$((timeout 5 curl -s https://ipv6.icanhazip.com) || (timeout 5 curl -s -6 https://api.ipify.org))
 
 # 创建目录
 [[ ! -d /usr/local/bin ]] && mkdir -p -m 755 /usr/local/bin
