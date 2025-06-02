@@ -236,6 +236,7 @@ source <(timeout 5 curl -sL https://raw.githubusercontent.com/yuzhouxiaogegit/bl
 xrayVersion=\$(yzxg_get_new_version_num 'https://github.com/XTLS/Xray-core/releases')
 curl -s -L -o xray.zip "https://github.com/XTLS/Xray-core/releases/download/\$xrayVersion/Xray-linux-\$(yzxg_get_cpu_arch).zip" && unzip -oq xray.zip -d /usr/local/bin
 rm -rf xray.zip
+systemctl restart xray.service
 EOF
 
 chmod 755 /opt/update_xray.sh
@@ -268,7 +269,7 @@ read -r -d '' userConfig << EOF
             "serverName": "${xrayDomain}",
             "fingerprint": "chrome",
             "publicKey": "$xrayPublicKey",
-            "shortId": "$(echo "${shortIds}" | cut -d "," -f1)"
+            "shortId": $(echo "${shortIds}" | cut -d "," -f1)
         },
         "xhttpSettings": {
                 "path": "/${xrayPath}"
@@ -289,3 +290,5 @@ then
 	echo -e "\n";
 	yzxg_echo_txt_color "${selfIpv6}" "green"
 fi
+
+rm -rf ./xray_xhttp_reality_install.sh
