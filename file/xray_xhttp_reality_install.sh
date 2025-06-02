@@ -227,9 +227,9 @@ EOF
 
 systemctl enable xray.service
 
-systemctl start xray.service
+systemctl restart xray.service
 
-systemctl status xray.service
+systemctl status xray.service --no-pager #把日志直接输入到终端
 
 cat > /opt/update_xray.sh << EOF
 #!/usr/bin/env bash
