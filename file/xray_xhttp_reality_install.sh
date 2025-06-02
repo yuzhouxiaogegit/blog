@@ -7,7 +7,6 @@ if [[ $(yzxg_get_package_manage) = 'yum' ]];then
 	yum install -y curl wget unzip firewalld
 	# 开放 80 和 443 端口
 	systemctl start firewalld.service
-	firewall-cmd --zone=public --add-port=80/tcp --permanent
 	firewall-cmd --zone=public --add-port=443/tcp --permanent
 	firewall-cmd --reload
 	systemctl restart firewalld.service
