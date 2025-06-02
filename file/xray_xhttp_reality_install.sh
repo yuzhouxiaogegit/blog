@@ -1,18 +1,14 @@
 #!/usr/bin/env bash
 
 # 脚本函数初始化
-source <(timeout 10 curl -s https://raw.githubusercontent.com/yuzhouxiaogegit/blog/main/file/base_fun.sh)
-
-# 脚本 start --->
-
+source <(timeout 5 curl -sL https://raw.githubusercontent.com/yuzhouxiaogegit/blog/main/file/base_fun.sh)
 #获取ipv4
-selfIpv4=$(timeout 10 curl -s http://ipv4.icanhazip.com);
-
+selfIpv4=$((timeout 5 curl -s https://ipv4.icanhazip.com) || (timeout 5 curl -s https://api.ipify.org))
 #获取ipv6
-selfIpv6=$(timeout 10 curl -s http://ipv6.icanhazip.com);
+selfIpv6=$((timeout 5 curl -s https://ipv6.icanhazip.com) || (timeout 5 curl -s -6 https://api.ipify.org))
 
 # 伪装域名
-read -p "请输入境外域名,注意必须支持h2、h3协议(默认为 www.amazon.com):" xrayDomain;
+read -p "请输入境外域名,注意必须支持h2、h3协议(默认为 www.amazon.com):" xrayDomain
 if 
 	[[ $xrayDomain = "" ]];
 then
@@ -20,16 +16,16 @@ then
 fi
 
 # 伪装路径
-read -p "请输入伪装路径，默认随机生成:" xrayPath;
+read -p "请输入伪装路径，默认随机生成:" xrayPath
 
 if 
 	[[ $xrayPath = "" ]];
 then
-	xrayPath=$(yzxg_random_str 1 11);
+	xrayPath=$(yzxg_random_str 1 11)
 fi
 
 # xray端口
-read -p "请输入xray端口，默认443:" xrayPort;
+read -p "请输入xray端口，默认443:" xrayPort
 
 if 
 	[[ $xrayPort = "" ]];
@@ -38,7 +34,7 @@ then
 fi
 
 # 用户数量
-read -p "请输入生成用户的数量，默认10:" userNum;
+read -p "请输入生成用户的数量，默认10:" userNum
 
 if 
 	[[ $userNum = "" ]];
@@ -46,11 +42,61 @@ then
 	userNum=10;
 fi
 
+# 创建目录
+[[ ! -d /usr/local/bin ]] && mkdir -p -m 755 /usr/local/bin
+[[ ! -d /usr/local/etc/xray ]] && mkdir -p /usr/local/etc/xray
+[[ ! -d /usr/local/share/xray ]] && mkdir -p /usr/local/share/xray
+[[ ! -d /var/log/xray ]] && mkdir -p /var/log/xray
+# 获取最新版本号
+xrayVersion=$(yzxg_get_new_version_num 'https://github.com/XTLS/Xray-core/releases')
+# 下载 xray
+curl -s -L -o xray.zip "https://github.com/XTLS/Xray-core/releases/download/$xrayVersion/Xray-linux-$(yzxg_get_cpu_arch).zip" && unzip -oq xray.zip -d /usr/local/bin
+
+# 获取xray 生成公钥和私钥
+xrayTempKey=$(/usr/local/bin/xray x25519 | cut -d " " -f3)
+# 私钥
+xrayPrivateKey=$((echo $xrayTempKey) | grep -Po '.*(?=\s+)')
+# 公钥
+xrayPublicKey=$((echo $xrayTempKey) | grep -Po '(?=\s+).*')
+
+# 创建系统服务
+read -r -d '' xrayService << EOF
+
+[Unit]
+Description=Xray Service
+Documentation=https://github.com/xtls
+After=network.target nss-lookup.target
+
+[Service]
+User=root
+ExecStart=/usr/local/bin/xray run -config /usr/local/etc/xray/config.json
+Restart=on-failure
+RestartPreventExitStatus=23
+LimitNPROC=10000
+LimitNOFILE=1000000
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+cat > /etc/systemd/system/xray.service << EOF
+$xrayService
+EOF
+
+cat > /etc/systemd/system/xray@.service << EOF
+$xrayService
+EOF
+
+systemctl daemon-reload
+
+systemctl enable xray.service
+
+systemctl start xray.service
+
 levelId=1 # 等级id
 
 xrayUserJson='';
-
-bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install;
 
 for((i=1;i<=${userNum};i++));  
 	do   
@@ -65,7 +111,6 @@ EOF
 
 done 
 
-
 shortIds='';
 
 for((i=1;i<=${userNum};i++));  
@@ -73,11 +118,6 @@ for((i=1;i<=${userNum};i++));
 	shortIds=${shortIds}"\"$(openssl rand -hex $(yzxg_random_num 1 8))\","
 done 
 
-tempKey=$(xray x25519);
-
-rm -rf ./tempKey.txt;
-
-echo "$(xray x25519 | cut -d " " -f3)" >> ./tempKey.txt;
 
 cat > /usr/local/etc/xray/config.json << EOF
 
@@ -124,7 +164,7 @@ cat > /usr/local/etc/xray/config.json << EOF
                     "show": false,
                     "target": "${xrayDomain}:${xrayPort}",
                     "serverNames": ["${xrayDomain}"],
-                    "privateKey": "$(head -n 1 ./tempKey.txt)",
+                    "privateKey": "$xrayPrivateKey",
                     "shortIds": [${shortIds%?}]
                 },
                 "xhttpSettings": {
@@ -176,12 +216,19 @@ cat > /usr/local/etc/xray/config.json << EOF
 
 EOF
 
-systemctl restart xray
-systemctl enable xray
-systemctl status xray
+cat > /opt/update_xray.sh << EOF
+#!/usr/bin/env bash
 
-crontabStr='0 23 * * 6  bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install && systemctl restart xray'
-isXrayCron=$(cat /var/spool/cron/root | grep install-release)
+source <(timeout 5 curl -sL https://raw.githubusercontent.com/yuzhouxiaogegit/blog/main/file/base_fun.sh)
+xrayVersion=\$(yzxg_get_new_version_num 'https://github.com/XTLS/Xray-core/releases')
+curl -s -L -o xray.zip "https://github.com/XTLS/Xray-core/releases/download/\$xrayVersion/Xray-linux-\$(yzxg_get_cpu_arch).zip" && unzip -oq xray.zip -d /usr/local/bin
+
+EOF
+
+chmod 755 /opt/update_xray.sh
+
+crontabStr='0 23 * * 6  /opt/update_xray.sh && systemctl restart xray'
+isXrayCron=$(cat /var/spool/cron/root | grep update_xray)
 
 if [[ $isXrayCron == '' ]];then
     echo "$crontabStr" >> /var/spool/cron/root;
@@ -207,7 +254,7 @@ read -r -d '' userConfig << EOF
         "realitySettings": {
             "serverName": "${xrayDomain}",
             "fingerprint": "chrome",
-            "publicKey": "$(tail -n 1 ./tempKey.txt)",
+            "publicKey": "$xrayPublicKey",
             "shortId": "$(echo "${shortIds}" | cut -d "," -f1)"
         },
         "xhttpSettings": {
@@ -217,18 +264,15 @@ read -r -d '' userConfig << EOF
 }
 EOF
 
-yzxg_echo_txt_color "${userConfig}" "green";
+yzxg_echo_txt_color "${userConfig}" "green"
+
 echo -e "\n";
 
 #如果获取到了 ipv6 则显示出来
 if 
 	[[ $selfIpv6 != "" ]];
 then
-	yzxg_echo_txt_color "ipv6地址如下" "yellow";
+	yzxg_echo_txt_color "ipv6地址如下" "yellow"
 	echo -e "\n";
-	yzxg_echo_txt_color "${selfIpv6}" "green";
+	yzxg_echo_txt_color "${selfIpv6}" "green"
 fi
-
-rm -rf ./tempKey.txt;
-
-# 脚本 <-- end
