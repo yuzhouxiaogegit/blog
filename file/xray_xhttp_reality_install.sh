@@ -5,7 +5,8 @@ source <(timeout 5 curl -sL https://raw.githubusercontent.com/yuzhouxiaogegit/bl
  
 # 伪装域名
 read -p "请输入境外域名,注意必须支持h2、h3协议(默认为 www.amazon.com):" xrayDomain
-if [[ $xrayDomain = "" ]]; then
+if [[ $xrayDomain = "" ]]
+then
 	xrayDomain='www.amazon.com'
 fi
 
