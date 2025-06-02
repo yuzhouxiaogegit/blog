@@ -119,3 +119,62 @@ yzxg_get_package_manage(){
 	    echo "unknown"
 	fi
 }
+
+# 获取cpu架构
+yzxg_get_cpu_arch() {
+	local cpuArch=''
+	  if [[ "$(uname)" != 'Linux' ]]; then
+	    return 1
+	  fi
+	  case "$(uname -m)" in
+	  'i386' | 'i686')
+	    cpuArch='32'
+	    ;;
+	  'amd64' | 'x86_64')
+	    cpuArch='64'
+	    ;;
+	  'armv5tel')
+	    cpuArch='arm32-v5'
+	    ;;
+	  'armv6l')
+	    cpuArch='arm32-v6'
+	    grep Features /proc/cpuinfo | grep -qw 'vfp' || cpuArch='arm32-v5'
+	    ;;
+	  'armv7' | 'armv7l')
+	    cpuArch='arm32-v7a'
+	    grep Features /proc/cpuinfo | grep -qw 'vfp' || cpuArch='arm32-v5'
+	    ;;
+	  'armv8' | 'aarch64')
+	    cpuArch='arm64-v8a'
+	    ;;
+	  'mips')
+	    cpuArch='mips32'
+	    ;;
+	  'mipsle')
+	    cpuArch='mips32le'
+	    ;;
+	  'mips64')
+	    cpuArch='mips64'
+	    lscpu | grep -q "Little Endian" && cpuArch='mips64le'
+	    ;;
+	  'mips64le')
+	    cpuArch='mips64le'
+	    ;;
+	  'ppc64')
+	    cpuArch='ppc64'
+	    ;;
+	  'ppc64le')
+	    cpuArch='ppc64le'
+	    ;;
+	  'riscv64')
+	    cpuArch='riscv64'
+	    ;;
+	  's390x')
+	    cpuArch='s390x'
+	    ;;
+	  *)
+	    return 1
+	    ;;
+	   esac
+	   echo $cpuArch
+}
