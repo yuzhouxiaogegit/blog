@@ -6,7 +6,7 @@ source <(timeout 5 curl -sL https://raw.githubusercontent.com/yuzhouxiaogegit/bl
 # 伪装域名
 read -p "请输入境外域名,注意必须支持h2、h3协议(默认为 www.amazon.com):" xrayDomain
 if 
-	[[ $xrayDomain = "" ]];then
+	[[ $xrayDomain = "" ]]; then
 	xrayDomain='www.amazon.com'
 fi
 
@@ -14,7 +14,7 @@ fi
 read -p "请输入伪装路径，默认随机生成:" xrayPath
 
 if 
-	[[ $xrayPath = "" ]];then
+	[[ $xrayPath = "" ]]; then
 	xrayPath=$(yzxg_random_str 1 11)
 fi
 
@@ -22,7 +22,7 @@ fi
 read -p "请输入xray端口，默认443:" xrayPort
 
 if 
-	[[ $xrayPort = "" ]];then
+	[[ $xrayPort = "" ]]; then
 	xrayPort=443
 fi
 
@@ -30,11 +30,11 @@ fi
 read -p "请输入生成用户的数量，默认10:" userNum
 
 if 
-	[[ $userNum = "" ]];then
+	[[ $userNum = "" ]]; then
 	userNum=10
 fi
 
-if [[ $(yzxg_get_package_manage) = 'yum' ]];then
+if [[ $(yzxg_get_package_manage) = 'yum' ]]; then
 	yum install -y curl wget unzip firewalld
 	systemctl start firewalld.service
 	firewall-cmd --zone=public --add-port=$xrayPort/tcp --permanent
@@ -240,7 +240,7 @@ chmod 755 /opt/update_xray.sh
 crontabStr='0 23 * * 6  /opt/update_xray.sh'
 isXrayCron=$(cat /var/spool/cron/root | grep update_xray)
 
-if [[ $isXrayCron == '' ]];then
+if [[ $isXrayCron == '' ]]; then
     echo "$crontabStr" >> /var/spool/cron/root
     systemctl reload crond.service
     systemctl restart crond.service
@@ -280,7 +280,7 @@ echo -e "\n"
 
 #如果获取到了 ipv6 则显示出来
 if 
-	[[ $selfIpv6 != "" ]];then
+	[[ $selfIpv6 != "" ]]; then
 	yzxg_echo_txt_color "ipv6地址如下" "yellow"
 	echo -e "\n"
 	yzxg_echo_txt_color "${selfIpv6}" "green"
