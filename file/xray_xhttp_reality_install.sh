@@ -6,7 +6,7 @@ source <(timeout 5 curl -sL https://raw.githubusercontent.com/yuzhouxiaogegit/bl
 # 伪装域名
 read -p "请输入境外域名,注意必须支持h2、h3协议(默认为 www.amazon.com):" xrayDomain
 if 
-	[[ $xrayDomain = "" ]];
+	[[ $xrayDomain = "" ]]
 then
 	xrayDomain='www.amazon.com'
 fi
@@ -15,7 +15,7 @@ fi
 read -p "请输入伪装路径，默认随机生成:" xrayPath
 
 if 
-	[[ $xrayPath = "" ]];
+	[[ $xrayPath = "" ]]
 then
 	xrayPath=$(yzxg_random_str 1 11)
 fi
@@ -24,21 +24,22 @@ fi
 read -p "请输入xray端口，默认443:" xrayPort
 
 if 
-	[[ $xrayPort = "" ]];
+	[[ $xrayPort = "" ]]
 then
-	xrayPort=443;
+	xrayPort=443
 fi
 
 # 用户数量
 read -p "请输入生成用户的数量，默认10:" userNum
 
 if 
-	[[ $userNum = "" ]];
+	[[ $userNum = "" ]]
 then
-	userNum=10;
+	userNum=10
 fi
 
-if [[ $(yzxg_get_package_manage) = 'yum' ]];then
+if [[ $(yzxg_get_package_manage) = 'yum' ]]
+then
 	yum install -y curl wget unzip firewalld
 	systemctl start firewalld.service
 	firewall-cmd --zone=public --add-port=$xrayPort/tcp --permanent
@@ -63,7 +64,7 @@ curl -s -L -o xray.zip "https://github.com/XTLS/Xray-core/releases/download/$xra
 rm -rf xray.zip
 
 # 获取xray 生成公钥和私钥
-echo "$(/usr/local/bin/xray x25519 | cut -d " " -f3)" >> ./tempKey.txt;
+echo "$(/usr/local/bin/xray x25519 | cut -d " " -f3)" >> ./tempKey.txt
 # 私钥
 xrayPrivateKey=$(sed -n '1p' ./tempKey.txt)
 # 公钥
@@ -103,9 +104,9 @@ systemctl daemon-reload
 
 levelId=1 # 等级id
 
-xrayUserJson='';
+xrayUserJson=''
 
-for((i=1;i<=${userNum};i++));  
+for((i=1;i<=${userNum};i++)) 
 	do   
 	xrayUserJson=${xrayUserJson}$(cat << EOF
 	            {
@@ -118,9 +119,9 @@ EOF
 
 done 
 
-shortIds='';
+shortIds=''
 
-for((i=1;i<=${userNum};i++));  
+for((i=1;i<=${userNum};i++))  
 	do   
 	shortIds=${shortIds}"\"$(openssl rand -hex $(yzxg_random_num 1 8))\","
 done 
@@ -244,19 +245,20 @@ chmod 755 /opt/update_xray.sh
 crontabStr='0 23 * * 6  /opt/update_xray.sh'
 isXrayCron=$(cat /var/spool/cron/root | grep update_xray)
 
-if [[ $isXrayCron == '' ]];then
-    echo "$crontabStr" >> /var/spool/cron/root;
-    systemctl reload crond.service;
-    systemctl restart crond.service;
+if [[ $isXrayCron == '' ]]
+then
+    echo "$crontabStr" >> /var/spool/cron/root
+    systemctl reload crond.service
+    systemctl restart crond.service
 fi
 
-echo -e "\n";
-yzxg_echo_txt_color "xray 服务端配置如下" "yellow";
-echo -e "\n";
-yzxg_echo_txt_color "${xrayUserJson%?}" "green";
-echo -e "\n";
-yzxg_echo_txt_color "xray 客户端（ auto... ）中配置如下" "yellow";
-echo -e "\n";
+echo -e "\n"
+yzxg_echo_txt_color "xray 服务端配置如下" "yellow"
+echo -e "\n"
+yzxg_echo_txt_color "${xrayUserJson%?}" "green"
+echo -e "\n"
+yzxg_echo_txt_color "xray 客户端（ auto... ）中配置如下" "yellow"
+echo -e "\n"
 
 read -r -d '' userConfig << EOF
 {
@@ -280,14 +282,14 @@ EOF
 
 yzxg_echo_txt_color "${userConfig}" "green"
 
-echo -e "\n";
+echo -e "\n"
 
 #如果获取到了 ipv6 则显示出来
 if 
-	[[ $selfIpv6 != "" ]];
+	[[ $selfIpv6 != "" ]]
 then
 	yzxg_echo_txt_color "ipv6地址如下" "yellow"
-	echo -e "\n";
+	echo -e "\n"
 	yzxg_echo_txt_color "${selfIpv6}" "green"
 fi
 
