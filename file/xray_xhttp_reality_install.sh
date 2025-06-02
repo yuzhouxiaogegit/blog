@@ -2,6 +2,17 @@
 
 # 脚本函数初始化
 source <(timeout 5 curl -sL https://raw.githubusercontent.com/yuzhouxiaogegit/blog/main/file/base_fun.sh)
+ 
+if [[ $(yzxg_get_package_manage) = 'yum' ]];then
+	yum install -y curl wget unzip firewalld
+	# 开放 80 和 443 端口
+	systemctl start firewalld.service
+	firewall-cmd --zone=public --add-port=80/tcp --permanent
+	firewall-cmd --zone=public --add-port=443/tcp --permanent
+	firewall-cmd --reload
+	systemctl restart firewalld.service
+fi
+
 #获取ipv4
 selfIpv4=$((timeout 5 curl -s https://ipv4.icanhazip.com) || (timeout 5 curl -s https://api.ipify.org))
 #获取ipv6
@@ -51,13 +62,15 @@ fi
 xrayVersion=$(yzxg_get_new_version_num 'https://github.com/XTLS/Xray-core/releases')
 # 下载 xray
 curl -s -L -o xray.zip "https://github.com/XTLS/Xray-core/releases/download/$xrayVersion/Xray-linux-$(yzxg_get_cpu_arch).zip" && unzip -oq xray.zip -d /usr/local/bin
+rm -rf xray.zip
 
 # 获取xray 生成公钥和私钥
-xrayTempKey=$(/usr/local/bin/xray x25519 | cut -d " " -f3)
+echo "$(/usr/local/bin/xray x25519 | cut -d " " -f3)" >> ./tempKey.txt;
 # 私钥
-xrayPrivateKey=$((echo $xrayTempKey) | grep -Po '.*(?=\s+)')
+xrayPrivateKey=$(sed -n '1p' ./tempKey.txt)
 # 公钥
-xrayPublicKey=$((echo $xrayTempKey) | grep -Po '(?=\s+).*')
+xrayPublicKey=$(sed -n '2p' ./tempKey.txt)
+rm -rf ./tempKey.txt
 
 # 创建系统服务
 read -r -d '' xrayService << EOF
@@ -89,10 +102,6 @@ $xrayService
 EOF
 
 systemctl daemon-reload
-
-systemctl enable xray.service
-
-systemctl start xray.service
 
 levelId=1 # 等级id
 
@@ -216,13 +225,19 @@ cat > /usr/local/etc/xray/config.json << EOF
 
 EOF
 
+systemctl enable xray.service
+
+systemctl start xray.service
+
+systemctl status xray.service
+
 cat > /opt/update_xray.sh << EOF
 #!/usr/bin/env bash
 
 source <(timeout 5 curl -sL https://raw.githubusercontent.com/yuzhouxiaogegit/blog/main/file/base_fun.sh)
 xrayVersion=\$(yzxg_get_new_version_num 'https://github.com/XTLS/Xray-core/releases')
 curl -s -L -o xray.zip "https://github.com/XTLS/Xray-core/releases/download/\$xrayVersion/Xray-linux-\$(yzxg_get_cpu_arch).zip" && unzip -oq xray.zip -d /usr/local/bin
-
+rm -rf xray.zip
 EOF
 
 chmod 755 /opt/update_xray.sh
