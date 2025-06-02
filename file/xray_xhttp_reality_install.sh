@@ -241,7 +241,7 @@ EOF
 
 chmod 755 /opt/update_xray.sh
 
-crontabStr='0 23 * * 6  /opt/update_xray.sh && systemctl restart xray'
+crontabStr='0 23 * * 6  /opt/update_xray.sh'
 isXrayCron=$(cat /var/spool/cron/root | grep update_xray)
 
 if [[ $isXrayCron == '' ]];then
