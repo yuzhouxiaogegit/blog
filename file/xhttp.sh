@@ -2,7 +2,7 @@
 
 # 脚本函数初始化
 source <(timeout 5 curl -sL https://raw.githubusercontent.com/yuzhouxiaogegit/blog/main/file/base_fun.sh)
- 
+
 # 伪装域名
 read -p "请输入境外域名,注意必须支持h2、h3协议(默认为 www.amazon.com):" xrayDomain
 if [[ $xrayDomain = "" ]]
@@ -236,7 +236,7 @@ rm -rf xray.zip
 systemctl restart xray.service
 EOF
 
-chmod 755 /opt/update_xray.sh
+chmod +x /opt/update_xray.sh
 
 crontabStr='0 23 * * 6  /opt/update_xray.sh'
 isXrayCron=$(cat /var/spool/cron/root | grep update_xray)
@@ -288,4 +288,4 @@ then
 	yzxg_echo_txt_color "${selfIpv6}" "green"
 fi
 
-rm -rf ./xray_xhttp_reality_install.sh
+rm -rf $(readlink -f "$0")
