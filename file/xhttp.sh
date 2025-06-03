@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # 脚本函数初始化
-source <(timeout 5 curl -sL https://raw.githubusercontent.com/yuzhouxiaogegit/blog/main/file/base_fun.sh)
+source <(timeout 5 curl -sL https://raw.githubusercontent.com/yuzhouxiaogegit/blog/main/file/base_fun.sh) && clear
 
 # 伪装域名
 read -p "请输入境外域名,注意必须支持h2、h3协议(默认为 www.amazon.com):" xrayDomain
