@@ -46,14 +46,14 @@ then
 	# 开放特定端口 end <--
 	firewall-cmd --reload
 	systemctl restart firewalld.service
+	
+	echo -e "\n"
+	yzxg_echo_txt_color "防火墙开放端口列表" "green"
+	firewall-cmd --list-ports
+	
+	echo -e "\n"
+	yzxg_echo_txt_color "查看允许通过防火墙的ip列表" "green"
+	firewall-cmd --list-rich-rules
 else
 	yzxg_echo_txt_color "暂不支持您的防火墙，等待更新" "green"
 fi
-
-echo -e "\n"
-yzxg_echo_txt_color "防火墙开放端口列表" "green"
-firewall-cmd --list-ports
-
-echo -e "\n"
-yzxg_echo_txt_color "查看允许通过防火墙的ip列表" "green"
-firewall-cmd --list-rich-rules
