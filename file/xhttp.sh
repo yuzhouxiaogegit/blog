@@ -38,7 +38,9 @@ if [[ $(yzxg_get_package_manage) = 'yum' ]]
 then
 	yum install -y curl wget unzip firewalld
 	systemctl start firewalld.service
-	firewall-cmd --zone=public --add-port=$xrayPort/tcp --permanent
+	if [[ ! $(firewall-cmd --list-ports | grep -Po $xrayPort) ]]; then
+		firewall-cmd --zone=public --add-port=$xrayPort/tcp --permanent
+	fi
 	firewall-cmd --reload
 	systemctl restart firewalld.service
 fi
@@ -99,29 +101,45 @@ EOF
 systemctl daemon-reload
 
 levelId=1 # 等级id
-
+shortIds=''
 xrayUserJson=''
+shareLinks=''
+read -r -d '' userConfig << EOF
+{
+    "downloadSettings": {
+        "address": "${selfIpv4}",
+        "port": ${xrayPort},
+        "network": "xhttp",
+        "security": "reality",
+        "realitySettings": {
+            "serverName": "${xrayDomain}",
+            "fingerprint": "chrome",
+            "publicKey": "$xrayPublicKey",
+            "shortId": $(echo "${shortIds}" | cut -d "," -f1)
+        },
+        "xhttpSettings": {
+                "path": "/${xrayPath}"
+        }
+    }
+}
+EOF
 
+indexShort=0
 for((i=1;i<=${userNum};i++)) 
 	do   
+	indexShort=$((indexShort + 1))
+	shortIds=${shortIds}"\"$(openssl rand -hex $(yzxg_random_num 1 8))\","
+	userId=$(cat /proc/sys/kernel/random/uuid)
 	xrayUserJson=${xrayUserJson}$(cat << EOF
 	            {
-	                "id": "$(cat /proc/sys/kernel/random/uuid)",
+	                "id": "$userId",
 	                "level": $levelId,
 	                "email": "$(yzxg_random_str 8 18)@qq.com"
 	            },
 EOF
 )
-
+	shareLinks+="vless://$userId@$selfIpv4:$xrayPort?encryption=none&security=reality&sni=$xrayDomain&fp=chrome&pbk=$xrayPublicKey&sid=$(echo $shortIds | grep -Po '[^,\"]+' | sed -n $indexShort'p')&spx=%2F&type=xhttp&path=%2F$xrayPath&mode=auto#xhttp \n\n"
 done 
-
-shortIds=''
-
-for((i=1;i<=${userNum};i++))  
-	do   
-	shortIds=${shortIds}"\"$(openssl rand -hex $(yzxg_random_num 1 8))\","
-done 
-
 
 cat > /usr/local/etc/xray/config.json << EOF
 
@@ -249,43 +267,5 @@ then
 fi
 
 echo -e "\n"
-yzxg_echo_txt_color "xray 服务端配置如下" "yellow"
-echo -e "\n"
-yzxg_echo_txt_color "${xrayUserJson%?}" "green"
-echo -e "\n"
-yzxg_echo_txt_color "xray 客户端（ auto... ）中配置如下" "yellow"
-echo -e "\n"
-
-read -r -d '' userConfig << EOF
-{
-    "downloadSettings": {
-        "address": "${selfIpv4}",
-        "port": ${xrayPort},
-        "network": "xhttp",
-        "security": "reality",
-        "realitySettings": {
-            "serverName": "${xrayDomain}",
-            "fingerprint": "chrome",
-            "publicKey": "$xrayPublicKey",
-            "shortId": $(echo "${shortIds}" | cut -d "," -f1)
-        },
-        "xhttpSettings": {
-                "path": "/${xrayPath}"
-        }
-    }
-}
-EOF
-
-yzxg_echo_txt_color "${userConfig}" "green"
-
-echo -e "\n"
-
-#如果获取到了 ipv6 则显示出来
-if [[ $selfIpv6 != "" ]]
-then
-	yzxg_echo_txt_color "ipv6地址如下" "yellow"
-	echo -e "\n"
-	yzxg_echo_txt_color "${selfIpv6}" "green"
-fi
-
+yzxg_echo_txt_color "$shareLinks" "green"
 rm -rf $(readlink -f "$0")
