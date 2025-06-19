@@ -13,7 +13,7 @@ yzxg_base64_en(){
 	do
 	    tempStr=$(printf '%s' "$tempStr" | base64)
 	done
-	echo $(echo $tempStr | grep -Eo '[A-Za-z0-9+/=]+')
+	echo $(echo $tempStr | sed 's/[^A-Za-z0-9+/=]//g')
 }
 
 #base64解密方法
@@ -23,7 +23,7 @@ yzxg_base64_de(){
 	local tempStr=${1:-} # 解密字符串
 	for (( i=1; i<=$loopNum; i++ ))
 	do
-	    tempStr=$(printf '%s' "$tempStr" | grep -Eo '[A-Za-z0-9+/=]+' | base64 -d)
+	    tempStr=$(printf '%s' "$tempStr" | sed 's/[^A-Za-z0-9+/=]//g' | base64 -d)
 	done
 	echo $tempStr
 }
