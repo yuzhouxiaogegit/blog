@@ -257,14 +257,7 @@ EOF
 chmod +x /opt/update_xray.sh
 
 crontabStr='0 23 * * 6  /opt/update_xray.sh'
-isXrayCron=$(cat /var/spool/cron/root | grep update_xray)
-
-if [[ $isXrayCron == '' ]]
-then
-    echo "$crontabStr" >> /var/spool/cron/root
-    systemctl reload crond.service
-    systemctl restart crond.service
-fi
+(crontab -l | grep "${crontabStr}") || (crontab -l; echo "${crontabStr}") | crontab -
 
 echo -e "\n"
 yzxg_echo_txt_color "$shareLinks" "green"
