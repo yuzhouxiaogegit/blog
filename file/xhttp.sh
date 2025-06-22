@@ -36,6 +36,7 @@ fi
 
 if [[ $(yzxg_get_package_manage) = 'yum' ]]
 then
+	# centos
 	yum install -y curl wget unzip firewalld
 	systemctl start firewalld.service
 	if [[ ! $(firewall-cmd --list-ports | grep -Po $xrayPort) ]]; then
@@ -43,6 +44,22 @@ then
 	fi
 	firewall-cmd --reload
 	systemctl restart firewalld.service
+elif [[ "$pkg_manager" = 'apt' ]]
+then
+    # Debian/Ubuntu 相关命令
+    apt update
+    apt install -y curl wget unzip ufw # 在 Debian 上安装 ufw
+    systemctl start ufw.service
+    systemctl enable ufw.service
+    ufw allow "$xrayPort"/tcp comment "Allow Xray Port"
+    ufw reload
+    # 确保 ufw 已经启用
+    if [[ $(ufw status | grep "Status: active") ]]; then
+        echo "UFW is active."
+    else
+        ufw enable # 如果未启用，则启用防火墙
+        echo "UFW enabled."
+    fi
 fi
 
 #获取ipv4
