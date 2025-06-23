@@ -170,8 +170,8 @@ cat > /usr/local/etc/xray/config.json << EOF
     "api": {
         "tag": "api",
         "services": [
-            "StatsService"
-        ]
+		"StatsService"
+ 	]
     },
     "policy": {
         "levels": {
@@ -195,7 +195,7 @@ cat > /usr/local/etc/xray/config.json << EOF
             "protocol": "vless",
             "settings": {
                 "clients": [${xrayUserJson%?}
-                ],
+        	],
                 "decryption": "none"
             },
             "streamSettings": {
@@ -235,23 +235,41 @@ cat > /usr/local/etc/xray/config.json << EOF
         }
     ],
     "outbounds": [
-        {
-            "tag": "direct",
-            "protocol": "freedom",
-            "settings": {}
-        }
+       {
+           "tag": "direct",
+           "protocol": "freedom",
+           "settings": {}
+       },
+       {
+           "tag": "blocked",
+	   "protocol": "blackhole",
+	   "settings": {}
+       }
     ],
     "routing": {
+    	"domainStrategy": "AsIs"
         "rules": [
-            {
-                "inboundTag": [
-                    "api"
-                ],
-                "outboundTag": "api",
-                "type": "field"
-            }
-        ],
-        "domainStrategy": "AsIs"
+           {
+                "type": "field",
+                "inboundTag": ["api"],
+                "outboundTag": "api"
+           },
+           {
+	        "type": "field",
+	        "ip": ["geoip:private","geoip:cn"],
+	        "outboundTag": "direct"
+	   },
+           {
+	     	"type": "field",
+	     	"protocol": ["bittorrent"],
+	     	"outboundTag": "direct"
+	   },
+	   {  
+		"type": "field",
+		"outboundTag": "blocked",
+		"domain": ["geosite:category-ads-all"]
+	   }
+        ] 
     }
 }
 
