@@ -34,7 +34,9 @@ then
 	userNum=10
 fi
 
-if [[ $(yzxg_get_package_manage) = 'yum' ]]
+isCommand=$(yzxg_get_package_manage)
+
+if [[ $isCommand = 'yum' ]]
 then
 	# centos
 	yum install -y curl wget unzip firewalld
@@ -44,7 +46,7 @@ then
 	fi
 	firewall-cmd --reload
 	systemctl restart firewalld.service
-elif [[ "$pkg_manager" = 'apt' ]]
+elif [[ $isCommand = 'apt' ]]
 then
     # Debian/Ubuntu 相关命令
     apt update
@@ -68,10 +70,8 @@ selfIpv4=$((timeout 5 curl -s https://ipv4.icanhazip.com) || (timeout 5 curl -s 
 selfIpv6=$((timeout 5 curl -s https://ipv6.icanhazip.com) || (timeout 5 curl -s -6 https://api.ipify.org))
 
 # 创建目录
-[[ ! -d /usr/local/bin ]] && mkdir -p -m 755 /usr/local/bin
-[[ ! -d /usr/local/etc/xray ]] && mkdir -p /usr/local/etc/xray
-[[ ! -d /usr/local/share/xray ]] && mkdir -p /usr/local/share/xray
-[[ ! -d /var/log/xray ]] && mkdir -p /var/log/xray
+mkdir -p -m 755 /usr/local/bin
+mkdir -p /usr/local/etc/xray /usr/local/share/xray /var/log/xray
 # 获取最新版本号
 xrayVersion=$(yzxg_get_new_version_num 'https://github.com/XTLS/Xray-core/releases')
 # 下载 xray
@@ -278,4 +278,5 @@ crontabStr='0 23 * * 6  /opt/update_xray.sh'
 
 echo -e "\n"
 yzxg_echo_txt_color "$shareLinks" "green"
+
 rm -rf $(readlink -f "$0")
