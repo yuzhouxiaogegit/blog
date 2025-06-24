@@ -252,7 +252,7 @@ cat > /usr/local/etc/xray/config.json << EOF
 	      {
 	        "type": "field",
 	        "outboundTag": "blocked",
-	        "domain": ["geosite:category-ads-all", "geosite:category-malware"]
+	        "domain": ["geosite:category-ads-all"]
 	      },
        	      {
 	        "type": "field",
