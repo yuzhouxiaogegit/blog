@@ -247,29 +247,34 @@ cat > /usr/local/etc/xray/config.json << EOF
        }
     ],
     "routing": {
-    	"domainStrategy": "AsIs"
-        "rules": [
-           {
-                "type": "field",
-                "inboundTag": ["api"],
-                "outboundTag": "api"
-           },
-           {
+    	    "domainStrategy": "AsIs",
+	    "rules": [
+	      {
 	        "type": "field",
-	        "ip": ["geoip:private","geoip:cn"],
+	        "outboundTag": "blocked",
+	        "domain": ["geosite:category-ads-all", "geosite:category-malware"]
+	      },
+       	      {
+	        "type": "field",
+	        "inboundTag": ["api"],
+	        "outboundTag": "api" 
+	      },
+       	      {
+	        "type": "field",
+	        "protocol": ["bittorrent"],
 	        "outboundTag": "direct"
-	   },
-           {
-	     	"type": "field",
-	     	"protocol": ["bittorrent"],
-	     	"outboundTag": "direct"
-	   },
-	   {  
-		"type": "field",
-		"outboundTag": "blocked",
-		"domain": ["geosite:category-ads-all"]
-	   }
-        ] 
+	      },
+	      {
+	        "type": "field",
+	        "ip": ["geoip:private", "geoip:cn"],
+	        "outboundTag": "direct"
+	      },
+	      {
+	        "type": "field",
+	        "domain": ["geosite:cn"],
+	        "outboundTag": "direct"
+	      }
+	    ]
     }
 }
 
