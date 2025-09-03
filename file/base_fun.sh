@@ -218,3 +218,35 @@ function detect_firewall() {
 
     echo "none"
 }
+
+# 系统自带的包安装 示例 install_pkg curl iproute2
+install_pkg() {
+
+    if [ "$#" -eq 0 ]; then
+        return 1
+    fi
+
+    local pkgs_to_install=("$@")
+
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get update && sudo apt-get install -y "${pkgs_to_install[@]}"
+        return $?
+    fi
+
+    if command -v dnf &> /dev/null; then
+        sudo dnf install -y "${pkgs_to_install[@]}"
+        return $?
+    fi
+
+    if command -v yum &> /dev/null; then
+        sudo yum install -y "${pkgs_to_install[@]}"
+        return $?
+    fi
+
+    if command -v pacman &> /dev/null; then
+        sudo pacman -S --noconfirm "${pkgs_to_install[@]}"
+        return $?
+    fi
+
+    return 1
+}
