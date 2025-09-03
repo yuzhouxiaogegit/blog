@@ -178,3 +178,43 @@ yzxg_get_cpu_arch() {
 	   esac
 	   echo $cpuArch
 }
+
+#检测防火墙属于那种类型
+function detect_firewall() {
+    # 检查 firewalld 服务
+    if command -v firewall-cmd &> /dev/null; then
+        if systemctl is-active --quiet firewalld; then
+            echo "firewalld"
+            return
+        fi
+    fi
+
+    # 检查 ufw 服务
+    if command -v ufw &> /dev/null; then
+        if ufw status | grep -q "Status: active"; then
+            echo "ufw"
+            return
+        fi
+    fi
+
+    # 检查 iptables 规则
+    if command -v iptables &> /dev/null; then
+        if sudo iptables -L -n &> /dev/null; then
+            # 进一步检查以排除 ufw/firewalld 使用的 iptables
+            if ! (sudo iptables -L -n | grep -q 'ufw-' || sudo iptables -L -n | grep -q 'firewalld'); then
+                echo "iptables"
+                return
+            fi
+        fi
+    fi
+
+    # 检查 nftables 规则
+    if command -v nft &> /dev/null; then
+        if sudo nft list ruleset &> /dev/null; then
+            echo "nftables"
+            return
+        fi
+    fi
+
+    echo "none"
+}
