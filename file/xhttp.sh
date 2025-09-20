@@ -81,11 +81,11 @@ curl -s -L -o xray.zip "https://github.com/XTLS/Xray-core/releases/download/$xra
 rm -rf xray.zip
 
 # 获取xray 生成公钥和私钥
-echo "$(/usr/local/bin/xray x25519 | cut -d " " -f3)" >> ./tempKey.txt
+/usr/local/bin/xray x25519 >> ./tempKey.txt
 # 私钥
-xrayPrivateKey=$(sed -n '1p' ./tempKey.txt)
-# 公钥
-xrayPublicKey=$(sed -n '2p' ./tempKey.txt)
+xrayPrivateKey=$(cat tempKey.txt | grep -oP 'PrivateKey: \K.*')
+# 公钥,密码
+xrayPassword=$(cat tempKey.txt | grep -oP 'Password: \K.*')
 rm -rf ./tempKey.txt
 
 # 创建系统服务
@@ -123,25 +123,6 @@ levelId=1 # 等级id
 shortIds=''
 xrayUserJson=''
 shareLinks=''
-read -r -d '' userConfig << EOF
-{
-    "downloadSettings": {
-        "address": "${selfIpv4}",
-        "port": ${xrayPort},
-        "network": "xhttp",
-        "security": "reality",
-        "realitySettings": {
-            "serverName": "${xrayDomain}",
-            "fingerprint": "chrome",
-            "publicKey": "$xrayPublicKey",
-            "shortId": $(echo "${shortIds}" | cut -d "," -f1)
-        },
-        "xhttpSettings": {
-                "path": "/${xrayPath}"
-        }
-    }
-}
-EOF
 
 indexShort=0
 for((i=1;i<=${userNum};i++)) 
@@ -157,7 +138,7 @@ for((i=1;i<=${userNum};i++))
 	            },
 EOF
 )
-	shareLinks+="vless://$userId@$selfIpv4:$xrayPort?encryption=none&security=reality&sni=$xrayDomain&fp=chrome&pbk=$xrayPublicKey&sid=$(echo $shortIds | grep -Po '[^,\"]+' | sed -n $indexShort'p')&spx=%2F&type=xhttp&path=%2F$xrayPath&mode=auto#xhttp \n\n"
+	shareLinks+="vless://$userId@$selfIpv4:$xrayPort?encryption=none&security=reality&sni=$xrayDomain&fp=chrome&pbk=$xrayPassword&sid=$(echo $shortIds | grep -Po '[^,\"]+' | sed -n $indexShort'p')&spx=%2F&type=xhttp&path=%2F$xrayPath&mode=auto#xhttp \n\n"
 done 
 
 cat > /usr/local/etc/xray/config.json << EOF
