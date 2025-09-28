@@ -39,6 +39,7 @@ isCommand=$(yzxg_get_package_manage)
 if [[ $isCommand = 'yum' ]]
 then
 	# centos
+	yum update -y
 	yum install -y curl iproute2 wget unzip firewalld
 	systemctl start firewalld.service
 	if [[ ! $(firewall-cmd --list-ports | grep -Po $xrayPort) ]]; then
@@ -51,7 +52,7 @@ elif [[ $isCommand = 'apt' ]]
 then
     # Debian/Ubuntu 相关命令
     apt update
-    apt install -y curl iproute2 wget unzip ufw # 在 Debian 上安装 ufw
+    apt install -y curl iproute2 wget unzip ufw bsdmainutils # 在 Debian 上安装 ufw
     systemctl start ufw.service
     systemctl enable ufw.service
     ufw allow "$(ss -tlpn | grep sshd | head -n1 | grep -Po ':[0-9]{2,}' | head -n1 | grep -Po '\d+')"/tcp
