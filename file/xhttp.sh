@@ -139,7 +139,7 @@ for((i=1;i<=${userNum};i++))
 	            },
 EOF
 )
-	shareLinks+="vless://$userId@$selfIpv4:$xrayPort?encryption=none&security=reality&sni=$xrayDomain&fp=chrome&pbk=$xrayPassword&sid=$(echo $shortIds | grep -Po '[^,\"]+' | sed -n $indexShort'p')&spx=%2F&type=xhttp&path=%2F$xrayPath&mode=auto#xhttp \n\n"
+	shareLinks+="vless://$userId@$selfIpv4:$xrayPort?encryption=none&security=reality&sni=$xrayDomain&fp=chrome&pbk=$xrayPassword&sid=$(echo $shortIds | grep -Po '[^,\"]+' | sed -n $indexShort'p')&spx=%2F&type=xhttp&path=%2F$xrayPath&mode=auto#"$(hostname)"/reality+xhttp \n\n"
 done 
 
 cat > /usr/local/etc/xray/config.json << EOF
