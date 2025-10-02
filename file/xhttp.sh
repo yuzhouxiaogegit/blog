@@ -4,26 +4,17 @@
 source <(timeout 5 curl -sL https://raw.githubusercontent.com/yuzhouxiaogegit/blog/main/file/base_fun.sh) && clear
 
 # 伪装域名
-read -p "请输入境外域名,注意必须支持h2、h3协议(默认为 www.amazon.com):" xrayDomain
+read -p "请输入境外域名,注意必须支持h2、h3协议(默认随机洛杉矶域名):" xrayDomain
+
+# 域名配置列表，洛杉矶域名
+xrayDomainList=("www.amazon.com" "www.tesla.com")
+# 取出数组的随机索引
+arrRandomIndex=$(( $RANDOM % ${#xrayDomainList[@]} ))
+
+# 判断是否有伪装域名
 if [[ $xrayDomain = "" ]]
 then
-	xrayDomain='www.amazon.com'
-fi
-
-# 伪装路径
-read -p "请输入伪装路径，默认随机生成:" xrayPath
-
-if [[ $xrayPath = "" ]]
-then
-	xrayPath=$(yzxg_random_str 1 11)
-fi
-
-# xray端口
-read -p "请输入xray端口，默认443:" xrayPort
-
-if [[ $xrayPort = "" ]]
-then
-	xrayPort=443
+	xrayDomain=${xrayDomainList[$arrRandomIndex]}
 fi
 
 # 用户数量
@@ -33,6 +24,12 @@ if [[ $userNum = "" ]]
 then
 	userNum=10
 fi
+
+# 伪装路径
+xrayPath=$(yzxg_random_str 1 11)
+
+# xray端口
+xrayPort=443
 
 isCommand=$(yzxg_get_package_manage)
 
@@ -135,7 +132,7 @@ for((i=1;i<=${userNum};i++))
 	            {
 	                "id": "$userId",
 	                "level": $levelId,
-	                "email": "$(yzxg_random_str 8 18)@qq.com"
+	                "email": "$(yzxg_random_str 8 18)@xhttp.com"
 	            },
 EOF
 )
