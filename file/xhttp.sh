@@ -888,6 +888,17 @@ _fix_apt_gpg() {
 _fix_hostname
 _fix_apt_gpg
 
+# 若系统没有 sudo，创建一个透传 shim（脚本本身以 root 运行，直接执行即可）
+if ! check_cmd sudo; then
+    mkdir -p /usr/local/sbin
+    cat > /usr/local/sbin/sudo << 'EOF'
+#!/bin/bash
+exec "$@"
+EOF
+    chmod +x /usr/local/sbin/sudo
+    export PATH="/usr/local/sbin:$PATH"
+fi
+
 ensure_curl
 
 if ! source <(timeout 5 curl -sL https://raw.githubusercontent.com/yuzhouxiaogegit/blog/main/file/base_fun.sh); then
