@@ -11,9 +11,6 @@ NC='\033[0m'
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-WHITE='\033[0;37m'
 
 C_TITLE="${GREEN}"
 C_MENU="${YELLOW}"
@@ -47,9 +44,10 @@ get_service_manager() {
     fi
 }
 
-# URL 编码（hostname 中常见字符）
+# URL 编码（覆盖 RFC 3986 保留字符）
 url_encode() {
-    echo "$1" | sed 's/ /%20/g; s/#/%23/g; s/@/%40/g; s/&/%26/g; s/=/%3D/g'
+    echo "$1" | sed \
+        's/%/%25/g; s/ /%20/g; s/!/%21/g; s/"/%22/g; s/#/%23/g; s/\$/%24/g; s/&/%26/g; s/'"'"'/%27/g; s/(/%28/g; s/)/%29/g; s/\*/%2A/g; s/+/%2B/g; s/,/%2C/g; s/:/%3A/g; s/;/%3B/g; s/</%3C/g; s/=/%3D/g; s/>/%3E/g; s/?/%3F/g; s/@/%40/g; s/\[/%5B/g; s/\\/%5C/g; s/\]/%5D/g; s/\^/%5E/g; s/{/%7B/g; s/|/%7C/g; s/}/%7D/g'
 }
 
 # 生成 UUID v4
@@ -67,7 +65,7 @@ gen_uuid() {
     fi
 }
 
-# 人性化字节显示
+# 人性化字节显示（纯 awk，无外部依赖）
 human_bytes() {
     awk -v b="${1:-0}" 'BEGIN {
         split("B KB MB GB TB", u); i=1; v=b
@@ -76,25 +74,25 @@ human_bytes() {
     }'
 }
 
-# 生成随机字符串（fallback，基础库加载后会被覆盖）
+# 随机字符串 fallback（基础库加载后会被覆盖）
 yzxg_random_str() {
     local min=${1:-5} max=${2:-10}
     local len=$(( min + RANDOM % (max - min + 1) ))
     local chars='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    local result=''
+    local result='' i
     for (( i=0; i<len; i++ )); do
         result+="${chars:$(( RANDOM % ${#chars} )):1}"
     done
     echo "$result"
 }
 
-# 生成随机整数（fallback）
+# 随机整数 fallback
 yzxg_random_num() {
     local min=${1:-1} max=${2:-10}
     echo $(( min + RANDOM % (max - min + 1) ))
 }
 
-# 彩色输出（fallback）
+# 彩色输出 fallback
 yzxg_echo_txt_color() {
     local text="$1" color="$2"
     case "$color" in
@@ -151,11 +149,10 @@ get_ssh_port() {
 # 包管理 & 依赖安装
 # -------------------------------------------------------------
 
-# 等待 apt 锁释放（兼容无 fuser/lsof 环境，直接用 apt-get 返回值判断）
+# 等待 apt 锁释放（三层兼容：fuser → lsof → apt-get check）
 wait_apt_lock() {
     local i=0
     while true; do
-        # 优先用 fuser 检测
         if check_cmd fuser; then
             local locks="/var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock /var/cache/apt/archives/lock /var/lib/dpkg/lock"
             # shellcheck disable=SC2086
@@ -167,7 +164,6 @@ wait_apt_lock() {
             done
             [[ $locked -eq 0 ]] && break
         else
-            # 无检测工具：直接尝试 apt-get，失败则等待
             apt-get -qq -o DPkg::Lock::Timeout=1 check &>/dev/null 2>&1 && break
         fi
         (( i == 0 )) && echo -e "${YELLOW}检测到 apt 锁被占用，等待释放（最多 120 秒）...${NC}"
@@ -176,16 +172,23 @@ wait_apt_lock() {
     done
 }
 
+# apt update（忽略第三方源 GPG/签名错误，不影响主源）
+_apt_update() {
+    wait_apt_lock
+    apt-get update -qq \
+        -o APT::Update::Error-Mode=any \
+        2>/dev/null || true
+}
+
 # 安装一个或多个包（自动适配包管理器）
 install_pkg() {
     local pkgs=("$@")
     local mgr; mgr=$(get_pkg_manager)
     case "$mgr" in
         apt)
+            _apt_update
             wait_apt_lock
-            apt-get update -qq 2>/dev/null || true
-            wait_apt_lock
-            apt-get install -y "${pkgs[@]}"
+            apt-get install -y --allow-unauthenticated "${pkgs[@]}"
             ;;
         dnf)    dnf install -y "${pkgs[@]}" ;;
         yum)    yum install -y "${pkgs[@]}" ;;
@@ -199,27 +202,36 @@ install_pkg() {
     esac
 }
 
-# 安装所有运行依赖
+# 安装所有运行依赖（跳过已安装的包）
 install_deps() {
     local mgr; mgr=$(get_pkg_manager)
+    local pkgs=()
     case "$mgr" in
-        apt)     install_pkg curl wget unzip openssl iproute2 ufw gawk ;;
-        dnf|yum) install_pkg curl wget unzip openssl iproute firewalld gawk ;;
-        zypper)  install_pkg curl wget unzip openssl iproute2 firewalld gawk ;;
-        pacman)  install_pkg curl wget unzip openssl iproute2 ufw gawk ;;
-        apk)     install_pkg curl wget unzip openssl iproute2 iptables ip6tables gawk ;;
+        apt)     pkgs=(curl wget unzip openssl iproute2 ufw gawk) ;;
+        dnf|yum) pkgs=(curl wget unzip openssl iproute firewalld gawk) ;;
+        zypper)  pkgs=(curl wget unzip openssl iproute2 firewalld gawk) ;;
+        pacman)  pkgs=(curl wget unzip openssl iproute2 ufw gawk) ;;
+        apk)     pkgs=(curl wget unzip openssl iproute2 iptables ip6tables gawk) ;;
         *)
             echo -e "${C_ERROR}错误：不支持的包管理器，请手动安装依赖。${NC}"
             return 1
             ;;
     esac
+
+    # 过滤掉已安装的包
+    local missing=()
+    for pkg in "${pkgs[@]}"; do
+        check_cmd "$pkg" || missing+=("$pkg")
+    done
+    [[ ${#missing[@]} -eq 0 ]] && return 0
+
+    install_pkg "${missing[@]}"
 }
 
-# 确保 curl 已安装（在加载基础库前调用）
+# 确保 curl 已安装（先修源再装，避免旧系统 404）
 ensure_curl() {
     check_cmd curl && return 0
     echo -e "${YELLOW}未检测到 curl，正在尝试安装...${NC}"
-    # 先修复旧版本系统源，再安装（fix_repo 内部对 curl 缺失有兼容处理）
     fix_repo
     install_pkg curl || { echo -e "${RED}错误：无法自动安装 curl，请手动安装后重试！${NC}"; exit 1; }
     check_cmd curl  || { echo -e "${RED}错误：curl 安装失败，请手动安装后重试！${NC}"; exit 1; }
@@ -230,28 +242,28 @@ ensure_curl() {
 # 修复各发行版已停止维护的官方源
 # -------------------------------------------------------------
 
-# 检测是否可访问阿里云镜像（curl 不存在时返回 false）
+# 检测阿里云可达性（curl 不存在时直接返回 false）
 _can_reach_aliyun() {
     check_cmd curl || return 1
     timeout 5 curl -s https://mirrors.aliyun.com > /dev/null 2>&1
 }
 
-# 写入 apt sources.list 并禁用有效期检查（从 stdin 读取内容）
+# 写入 apt sources.list（从 stdin 读取），禁用有效期检查并刷新
 _write_apt_sources() {
     local sources=/etc/apt/sources.list
     cp "$sources" "${sources}.bak" 2>/dev/null
     cat > "$sources"
     echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
-    wait_apt_lock
-    apt-get update -qq 2>/dev/null || true
+    _apt_update
 }
 
-# 修复 Debian / Ubuntu 旧版本源（统一处理）
+# 修复 Debian / Ubuntu 旧版本源
 fix_apt_repo() {
     [[ "$(get_pkg_manager)" != "apt" ]] && return 0
 
+    # 加 Error-Mode=any 避免第三方源报错误判为"源不可用"
     wait_apt_lock
-    apt-get update -qq &>/dev/null 2>&1 && return 0
+    apt-get update -qq -o APT::Update::Error-Mode=any &>/dev/null 2>&1 && return 0
 
     local distro="" codename=""
     if [[ -f /etc/lsb-release ]] && grep -q "Ubuntu" /etc/lsb-release 2>/dev/null; then
@@ -334,7 +346,7 @@ fix_centos_repo() {
             curl -sL -o "${repo_dir}/CentOS-Base.repo" \
                 https://mirrors.aliyun.com/repo/Centos-vault-7.9.2009.repo
         fi
-        # 验证下载内容是否合法（必须包含 ini section 头）
+        # 验证内容合法性，不合法则用内置配置
         if ! grep -q '^\[' "${repo_dir}/CentOS-Base.repo" 2>/dev/null; then
             cat > "${repo_dir}/CentOS-Base.repo" << 'EOF'
 [base]
@@ -362,7 +374,6 @@ EOF
             curl -sL -o "${repo_dir}/CentOS-Base.repo" \
                 https://mirrors.aliyun.com/repo/Centos-vault-8.5.2111.repo
         fi
-        # 验证下载内容是否合法
         if ! grep -q '^\[' "${repo_dir}/CentOS-Base.repo" 2>/dev/null; then
             cat > "${repo_dir}/CentOS-Base.repo" << 'EOF'
 [baseos]
@@ -402,7 +413,6 @@ fix_repo() {
 # 防火墙管理
 # -------------------------------------------------------------
 
-# iptables 放行单个端口（同时处理 ipv4 / ipv6）
 _iptables_allow() {
     local port="$1"
     for ipt in iptables ip6tables; do
@@ -412,17 +422,14 @@ _iptables_allow() {
     done
 }
 
-# iptables 规则持久化
 _iptables_save() {
     if check_cmd netfilter-persistent; then
-        netfilter-persistent save
-        return
+        netfilter-persistent save; return
     fi
     if ! check_cmd iptables-save; then
         echo -e "${YELLOW}警告：iptables 规则已生效但无法持久化，重启后需重新设置。${NC}"
         return
     fi
-
     mkdir -p /etc/iptables
     iptables-save > /etc/iptables/rules.v4
     check_cmd ip6tables-save && ip6tables-save > /etc/iptables/rules.v6
@@ -459,7 +466,6 @@ EOF
     esac
 }
 
-# 开放防火墙端口（自动适配 firewalld / ufw / iptables）
 open_firewall_port() {
     local port="$1"
     local ssh_port; ssh_port=$(get_ssh_port)
@@ -485,7 +491,6 @@ open_firewall_port() {
 # 服务管理
 # -------------------------------------------------------------
 
-# 启用并启动服务
 service_enable_start() {
     local svc="$1"
     case "$(get_service_manager)" in
@@ -516,7 +521,6 @@ service_enable_start() {
     esac
 }
 
-# 查看服务状态
 service_status() {
     local svc="$1"
     case "$(get_service_manager)" in
@@ -526,7 +530,6 @@ service_status() {
     esac
 }
 
-# 创建并注册 xray 服务（自动适配服务管理器）
 register_xray_service() {
     case "$(get_service_manager)" in
         systemd)
@@ -635,7 +638,6 @@ xhttp_install() {
     local xrayPort=443
 
     echo -e "${C_TITLE}正在安装依赖...${NC}"
-    fix_repo
     install_deps || return 1
     open_firewall_port "$xrayPort"
 
@@ -681,7 +683,6 @@ xhttp_install() {
     local fpList=("chrome" "firefox" "safari" "edge")
     local levelId=1
     local shortIds='' xrayUserJson='' shareLinks=''
-    # IPv6 地址加方括号
     local shareIp="$currentIp"
     [[ "$shareIp" =~ : ]] && shareIp="[$shareIp]"
 
@@ -856,18 +857,45 @@ xray_traffic() {
 }
 
 # -------------------------------------------------------------
-# 初始化（root 检查 → 安装 curl → 加载基础库 → 进入菜单）
+# 初始化（root 检查 → 环境修复 → 安装 curl → 加载基础库 → 进入菜单）
 # -------------------------------------------------------------
 [[ $EUID -ne 0 ]] && { echo -e "\033[0;31m错误：必须使用 root 用户运行此脚本！\033[0m"; exit 1; }
+
+# 修复主机名解析（避免 sudo: unable to resolve host 警告）
+_fix_hostname() {
+    local hn; hn=$(hostname 2>/dev/null)
+    [[ -z "$hn" ]] && return
+    grep -q "$hn" /etc/hosts 2>/dev/null || echo "127.0.1.1 $hn" >> /etc/hosts
+}
+
+# 修复 apt 第三方源 GPG 失效问题（静默禁用无效签名的源）
+_fix_apt_gpg() {
+    [[ "$(get_pkg_manager)" != "apt" ]] && return
+    local sources_dir=/etc/apt/sources.list.d
+    [[ -d "$sources_dir" ]] || return
+    # 找出所有 GPG 验证失败的源文件，重命名为 .disabled
+    for f in "$sources_dir"/*.list; do
+        [[ -f "$f" ]] || continue
+        if apt-get update -qq -o "Dir::Etc::sourcelist=$f" \
+            -o "Dir::Etc::sourcelistd=/dev/null" \
+            2>&1 | grep -q "NO_PUBKEY\|not signed\|GPG error"; then
+            mv "$f" "${f}.disabled" 2>/dev/null && \
+                echo -e "${YELLOW}提示：已禁用 GPG 验证失败的源: $(basename "$f")${NC}"
+        fi
+    done
+}
+
+_fix_hostname
+_fix_apt_gpg
 
 ensure_curl
 
 if ! source <(timeout 5 curl -sL https://raw.githubusercontent.com/yuzhouxiaogegit/blog/main/file/base_fun.sh); then
-    echo -e "${RED}错误：基础工具库加载失败，请检查网络连接！${NC}"; exit 1
+    echo -e "${YELLOW}警告：基础工具库加载失败，将使用内置 fallback 函数继续运行。${NC}"
 fi
-if ! declare -f yzxg_get_new_version_num > /dev/null 2>&1; then
-    echo -e "${RED}错误：基础工具库函数未正确加载，请检查网络连接！${NC}"; exit 1
-fi
+# 验证关键函数是否可用（fallback 已在文件顶部定义，此处仅做提示）
+declare -f yzxg_get_new_version_num > /dev/null 2>&1 || \
+    echo -e "${YELLOW}提示：使用内置版本检测函数。${NC}"
 
 clear
 
