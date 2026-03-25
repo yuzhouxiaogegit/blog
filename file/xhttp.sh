@@ -219,6 +219,8 @@ install_deps() {
 ensure_curl() {
     check_cmd curl && return 0
     echo -e "${YELLOW}未检测到 curl，正在尝试安装...${NC}"
+    # 先修复旧版本系统源，再安装（fix_repo 内部对 curl 缺失有兼容处理）
+    fix_repo
     install_pkg curl || { echo -e "${RED}错误：无法自动安装 curl，请手动安装后重试！${NC}"; exit 1; }
     check_cmd curl  || { echo -e "${RED}错误：curl 安装失败，请手动安装后重试！${NC}"; exit 1; }
     echo -e "${GREEN}curl 安装成功。${NC}"
@@ -228,8 +230,11 @@ ensure_curl() {
 # 修复各发行版已停止维护的官方源
 # -------------------------------------------------------------
 
-# 检测是否可访问阿里云镜像
-_can_reach_aliyun() { timeout 5 curl -s https://mirrors.aliyun.com > /dev/null 2>&1; }
+# 检测是否可访问阿里云镜像（curl 不存在时返回 false）
+_can_reach_aliyun() {
+    check_cmd curl || return 1
+    timeout 5 curl -s https://mirrors.aliyun.com > /dev/null 2>&1
+}
 
 # 写入 apt sources.list 并禁用有效期检查（从 stdin 读取内容）
 _write_apt_sources() {
