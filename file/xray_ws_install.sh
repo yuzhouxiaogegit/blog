@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# --- 1. 强制 Root 权限与错误终止 ---
+# ---  强制 Root 权限与错误终止 ---
 if [[ $EUID -ne 0 ]]; then
    echo "错误：此脚本必须以 root 权限运行"
    exit 1
@@ -16,7 +16,7 @@ echoTxtColor(){
     echo -e "\033[${color_code}m${1}\033[0m"
 }
 
-# --- 2. 依赖全自动安装模块 ---
+# ---  依赖全自动安装模块 ---
 install_dependencies() {
     local deps=("curl" "jq" "sed")
     for dep in "${deps[@]}"; do
@@ -38,11 +38,15 @@ read -p "> " rawDomain
 xrayDomain=$(echo "$rawDomain" | tr -cd '[:alnum:].-')
 [[ -z "$xrayDomain" ]] && { echoTxtColor "域名格式错误" "red"; exit 1; }
 
-read -p "请输入伪装路径 (如 /nc5COQMZ): " xrayPath
-[[ -z "$xrayPath" ]] && xrayPath="/$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)"
+# 路径长度随机 6-16 位
+path_len=$(( (RANDOM % 11) + 6 ))
+read -p "请输入伪装路径 (留空则自动生成): " xrayPath
+if [[ -z "$xrayPath" ]]; then
+    xrayPath="/$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c $path_len)"
+fi
 [[ "$xrayPath" != /* ]] && xrayPath="/$xrayPath"
 
-# 端口逻辑：随机生成并保存到变量
+# 端口逻辑
 xrayPort=$(shuf -i 10000-65535 -n1)
 read -p "请输入用户数量: " userNum
 userNum=${userNum:-1}
@@ -50,12 +54,17 @@ userNum=${userNum:-1}
 # --- 部署 Xray ---
 bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
 
-# 生成用户数据
-clients=$(for i in $(seq 1 $userNum); do cat /proc/sys/kernel/random/uuid; done | jq -R . | jq -s "map({
-    id: ., 
-    level: $((RANDOM % 9 + 1)), 
-    alterId: $((RANDOM % 30 + 1))
-})")
+# 生成带随机指纹的用户数据
+fingerprints=("chrome" "firefox" "safari" "ios" "android" "edge")
+clients=$(for i in $(seq 1 $userNum); do 
+    fp=${fingerprints[$((RANDOM % ${#fingerprints[@]}))]}
+    uuid=$(cat /proc/sys/kernel/random/uuid)
+    jq -n --arg id "$uuid" --arg fp "$fp" '{
+        id: $id, 
+        level: 0, 
+        fingerprint: $fp
+    }'
+done | jq -s .)
 
 # 写入 Xray 配置文件
 cat <<EOF > /usr/local/etc/xray/config.json
@@ -82,13 +91,13 @@ echo -e "\n"
 echoTxtColor "================ 节点列表 (直接复制即可) ================" "green"
 echo "$clients" | jq -c '.[]' | while read -r client; do
     uuid=$(echo "$client" | jq -r '.id')
-    echoTxtColor "vless://${uuid}@${xrayDomain}:443?type=ws&path=${xrayPath}&host=${xrayDomain}&security=tls&sni=${xrayDomain}#${xrayDomain}" "green"
+    fp=$(echo "$client" | jq -r '.fingerprint')
+    echoTxtColor "vless://${uuid}@${xrayDomain}:443?type=ws&path=${xrayPath}&host=${xrayDomain}&security=tls&sni=${xrayDomain}&fp=${fp}#${xrayDomain}-${fp}" "green"
     echo "" 
 done
 
 # --- 输出 Nginx 配置 ---
 echoTxtColor "================ Nginx 反代配置 ================" "yellow"
-# 使用 \ 转义 Nginx 变量，让 Shell 忽略它们，同时确保 ${xrayPort} 正确解析
 cat <<EOF
     location ${xrayPath} {
         if (\$http_upgrade != "websocket") {
