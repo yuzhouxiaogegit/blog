@@ -1,149 +1,107 @@
 #!/usr/bin/env bash
 
-#指定区间随机数
-function random_num {
-   shuf -i $1-$2 -n1
-}
-#指定区间随机字符串
-function random_str {
-   echo $(echo $(cat /proc/sys/kernel/random/uuid) | cut -c $1-$2) | sed 's/[1 -]//g'
-}
-# 打印文字颜色方法
+# --- 1. 强制 Root 权限与错误终止 ---
+if [[ $EUID -ne 0 ]]; then
+   echo "错误：此脚本必须以 root 权限运行"
+   exit 1
+fi
+set -e
+
+# --- 颜色定义 ---
 echoTxtColor(){
-	
-	colorV="1"
-	
-	if [[ $2 = 'red' ]];
-	then
-		colorV="1"
-	elif [[ $2 = 'green' ]];
-	then
-		colorV="2"
-	elif [[ $2 = 'yellow' ]];
-	then
-		colorV="3"
-	fi
-	
-	echo -e "\033[3${colorV}m ${1} \033[0m"
+    local color_code="3${2:-1}"
+    case $2 in
+        "green") color_code="32" ;; "yellow") color_code="33" ;; "red") color_code="31" ;;
+    esac
+    echo -e "\033[${color_code}m${1}\033[0m"
 }
 
-# 伪装域名
-read -p "请输入伪装域名(例如 www.baidu.com):" xrayDomain
-if 
-	[[ $xrayDomain = "" ]];
-then
-	echoTxtColor "请输入伪装域名！" "red"
-	exit
-fi
+# --- 2. 依赖全自动安装模块 ---
+install_dependencies() {
+    local deps=("curl" "jq" "sed")
+    for dep in "${deps[@]}"; do
+        if ! command -v "$dep" &> /dev/null; then
+            echo "安装依赖: $dep..."
+            if command -v apt-get &> /dev/null; then apt-get update && apt-get install -y "$dep" || true
+            elif command -v yum &> /dev/null; then yum install -y epel-release && yum install -y "$dep" || true
+            elif command -v dnf &> /dev/null; then dnf install -y "$dep" || true
+            elif command -v apk &> /dev/null; then apk add --no-cache "$dep" || true
+            fi
+        fi
+    done
+}
+install_dependencies
 
-# 伪装路径
-read -p "请输入伪装路径，默认随机生成:" xrayPath
+# --- 输入参数 ---
+echo "请输入域名 (建议手动键盘输入):"
+read -p "> " rawDomain
+xrayDomain=$(echo "$rawDomain" | tr -cd '[:alnum:].-')
+[[ -z "$xrayDomain" ]] && { echoTxtColor "域名格式错误" "red"; exit 1; }
 
-if 
-	[[ $xrayPath = "" ]];
-then
-	xrayPath=$(random_str 1 11)
-fi
+read -p "请输入伪装路径 (如 /nc5COQMZ): " xrayPath
+[[ -z "$xrayPath" ]] && xrayPath="/$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)"
+[[ "$xrayPath" != /* ]] && xrayPath="/$xrayPath"
 
-# xray端口
-read -p "请输入xray端口，默认随机生成:" xrayPort
+# 端口逻辑：随机生成并保存到变量
+xrayPort=$(shuf -i 10000-65535 -n1)
+read -p "请输入用户数量: " userNum
+userNum=${userNum:-1}
 
-if 
-	[[ $xrayPort = "" ]];
-then
-	xrayPort=$(random_num 1500 20000)
-fi
-
-# 用户数量
-read -p "请输入生成用户的数量，默认10:" userNum
-
-if 
-	[[ $userNum = "" ]];
-then
-	userNum=10
-fi
-
-xrayUserJson='';
-
+# --- 部署 Xray ---
 bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
 
-for((i=1;i<=${userNum};i++));  
-	do   
-	xrayUserJson=${xrayUserJson}"
-            {
-                \"id\": \"`cat /proc/sys/kernel/random/uuid`\", 
-                \"level\": `random_num 1 9`,
-                \"alterId\": `random_num 1 30`
-            },"
-done 
+# 生成用户数据
+clients=$(for i in $(seq 1 $userNum); do cat /proc/sys/kernel/random/uuid; done | jq -R . | jq -s "map({
+    id: ., 
+    level: $((RANDOM % 9 + 1)), 
+    alterId: $((RANDOM % 30 + 1))
+})")
 
-echo "
+# 写入 Xray 配置文件
+cat <<EOF > /usr/local/etc/xray/config.json
 {
-  \"inbounds\": [
-    {
-      \"port\": ${xrayPort},
-      \"listen\": \"127.0.0.1\",
-      \"protocol\": \"vless\",
-      \"settings\": {
-        \"decryption\": \"none\",
-        \"clients\": [${xrayUserJson%?}
-        ]
-      },
-      \"streamSettings\": {
-        \"network\": \"ws\",
-        \"wsSettings\": {
-          \"path\": \"/${xrayPath}\",
-          \"headers\": {
-            \"Host\": \"${xrayDomain}\"
-          }
-        }
-      }
+  "inbounds": [{
+    "port": ${xrayPort},
+    "listen": "127.0.0.1",
+    "protocol": "vless",
+    "settings": { "decryption": "none", "clients": $(echo $clients | jq -c .) },
+    "streamSettings": {
+      "network": "ws",
+      "wsSettings": { "path": "${xrayPath}", "host": "${xrayDomain}" }
     }
-  ],
-  \"outbounds\": [
-    {
-      \"protocol\": \"freedom\",
-      \"settings\": {}
-    }
-  ]
+  }],
+  "outbounds": [{"protocol": "freedom"}]
 }
-" > /usr/local/etc/xray/config.json
+EOF
 
 systemctl restart xray
 systemctl enable xray
-systemctl status xray
 
-crontabStr='0 23 * * 6  bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install && systemctl restart xray'
-crontabConfigEnd=$(tail -n 1 /var/spool/cron/root)
-
-if [[ $crontabStr != $crontabConfigEnd ]];then
-    echo "$crontabStr" >> /var/spool/cron/root 
-    systemctl reload crond.service
-    systemctl restart crond.service
-fi
-
+# --- 输出结果 ---
 echo -e "\n"
-echoTxtColor "xray 用户uuid配置如下" "yellow";
-echo -e "\n"
-echo ${xrayUserJson}
-echo -e "\n"
-echoTxtColor "nginx 配置内容如下：" "yellow";
+echoTxtColor "================ 节点列表 (直接复制即可) ================" "green"
+echo "$clients" | jq -c '.[]' | while read -r client; do
+    uuid=$(echo "$client" | jq -r '.id')
+    echoTxtColor "vless://${uuid}@${xrayDomain}:443?type=ws&path=${xrayPath}&host=${xrayDomain}&security=tls&sni=${xrayDomain}#${xrayDomain}" "green"
+    echo "" 
+done
 
-nginxConfig="
- location /${xrayPath} { 
-      if (\$http_upgrade != "websocket") { 
-           rewrite ^(.*)\$ https://\$host;
-      }
-      proxy_redirect off;
-      proxy_pass http://127.0.0.1:${xrayPort};
-      proxy_http_version 1.1;
-      proxy_set_header Upgrade \$http_upgrade;
-      proxy_set_header Connection "upgrade";
-      proxy_set_header Host \$host;
-      proxy_set_header X-Real-IP \$remote_addr;
-      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+# --- 输出 Nginx 配置 ---
+echoTxtColor "================ Nginx 反代配置 ================" "yellow"
+# 使用 \ 转义 Nginx 变量，让 Shell 忽略它们，同时确保 ${xrayPort} 正确解析
+cat <<EOF
+    location ${xrayPath} {
+        if (\$http_upgrade != "websocket") {
+            rewrite ^(.*)\$ https://\$host permanent;
+        }
+        proxy_redirect off;
+        proxy_pass http://127.0.0.1:${xrayPort};
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     }
-"
-echo "$nginxConfig"
-echo -e "\n"
-
+EOF
+echo "================================================"
